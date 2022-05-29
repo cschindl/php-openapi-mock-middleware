@@ -15,6 +15,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use Vural\OpenAPIFaker\Exception\NoPath;
 use Vural\OpenAPIFaker\OpenAPIFaker;
+use Vural\OpenAPIFaker\Options;
 
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
@@ -54,6 +55,11 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
             $yaml = file_get_contents($pathToYaml);
             $faker = OpenAPIFaker::createFromYaml($yaml);
+            $faker->setOptions([
+                'minItems' => 1,
+                'maxItems' => 1,
+                'strategy' => Options::STRATEGY_STATIC,
+            ]);
 
             $path = $request->getUri()->getPath();
             $query = (!empty($request->getUri()->getQuery()) ? '?' . $request->getUri()->getQuery() : '');
