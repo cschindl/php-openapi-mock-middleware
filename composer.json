@@ -1,6 +1,6 @@
 {
     "name": "cschindl/php-openapi-mock-middleware",
-    "description": "Middleware to generate fake data for OpenAPI request/response/schemas.",
+    "description": "Middleware to generate fake data for OpenAPI response.",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -9,11 +9,26 @@
             "email": "cschindl@gmx.de"
         }
     ],
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../php-openapi-faker"
+        }
+    ],
+    "minimum-stability": "dev",
     "require": {
         "php": ">=7.4",
-        "ext-json": "*"
+        "ext-json": "*",
+        "cschindl/php-openapi-faker": "dev-master",
+        "psr/cache": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.0",
+        "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
+        "laminas/laminas-diactoros": "^2.11",
+        "phpspec/prophecy": "^1.15",
+        "phpspec/prophecy-phpunit": "^2.0",
         "phpstan/phpstan": "^1.7",
         "phpstan/phpstan-phpunit": "^1",
         "phpunit/phpunit": "^9.5"

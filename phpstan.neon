@@ -1,0 +1,7 @@
+parameters:
+    inferPrivatePropertyTypeFromConstructor: true
+    tmpDir: .build/phpstan/
+    level: 8
+    paths:
+        - src
+        - tests

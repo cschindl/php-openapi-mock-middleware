@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock;
 
+use cebe\openapi\exceptions\TypeErrorException;
+use cebe\openapi\exceptions\UnresolvableReferenceException;
 use Cschindl\OpenAPIMock\Exception\NoSchemaFileFound;
 use InvalidArgumentException;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,7 +18,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 use Vural\OpenAPIFaker\Exception\NoPath;
 use Vural\OpenAPIFaker\OpenAPIFaker;
-use Vural\OpenAPIFaker\Options;
 
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
@@ -30,14 +32,39 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     private $streamFactory;
 
     /**
+     * @var CacheItemPoolInterface|null
+     */
+    private $cache;
+
+    /**
+     * @var string
+     */
+    private string $pathToYaml;
+
+    /**
+     * @var array
+     */
+    private $options;
+
+    /**
      * @param ResponseFactoryInterface $responseFactory
+     * @param StreamFactoryInterface $streamFactory
+     * @param CacheItemPoolInterface|null $cache
+     * @param string $pathToYaml
+     * @param array $options
      */
     public function __construct(
         ResponseFactoryInterface $responseFactory,
-        StreamFactoryInterface $streamFactory
+        StreamFactoryInterface $streamFactory,
+        ?CacheItemPoolInterface $cache = null,
+        string $pathToYaml,
+        array $options
     ) {
         $this->responseFactory = $responseFactory;
         $this->streamFactory = $streamFactory;
+        $this->cache = $cache;
+        $this->pathToYaml = $pathToYaml;
+        $this->options = $options;
     }
 
     /**
@@ -48,20 +75,10 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
-            $pathToYaml = __DIR__ . '/../../php-openapi-faker/tests/specs/petstore.yaml';
-            if (!file_exists($pathToYaml)) {
-                throw NoSchemaFileFound::forFilename($pathToYaml);
-            }
+            $faker = $this->createFaker();
+            $faker->setOptions($this->options);
 
-            $yaml = file_get_contents($pathToYaml);
-            $faker = OpenAPIFaker::createFromYaml($yaml);
-            $faker->setOptions([
-                'minItems' => 1,
-                'maxItems' => 1,
-                'strategy' => Options::STRATEGY_STATIC,
-            ]);
-
-            $path = $request->getUri()->getPath();
+            $path = htmlentities($request->getUri()->getPath());
             $query = (!empty($request->getUri()->getQuery()) ? '?' . $request->getUri()->getQuery() : '');
             $method =  $request->getMethod();
             $statusCode = "200";
@@ -69,10 +86,39 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
             $fakeData = $faker->mockResponse($path . $query, $method, $statusCode, $contentType);
         } catch (Throwable $th) {
-            return $this->handleException($th, $request, $contentType);
+            return $this->handleException($th, $request, $contentType ?? 'application/json');
         }
 
         return $this->handleSuccess($fakeData, $contentType);
+    }
+
+    /**
+     * @return OpenAPIFaker
+     * @throws NoSchemaFileFound
+     * @throws TypeErrorException
+     * @throws UnresolvableReferenceException
+     */
+    private function createFaker(): OpenAPIFaker
+    {
+        if (!file_exists($this->pathToYaml)) {
+            throw NoSchemaFileFound::forFilename($this->pathToYaml);
+        }
+
+        if ($this->cache !== null) {
+            $cacheItem =  $this->cache->getItem(md5_file($this->pathToYaml));
+            if ($cacheItem->isHit()) {
+                return $cacheItem->get();
+            }
+        }
+
+        $faker = OpenAPIFaker::createFromYaml(file_get_contents($this->pathToYaml));
+
+        if ($cacheItem !== null) {
+            $cacheItem->set($faker);
+            $this->cache->save($cacheItem);
+        }
+
+        return $faker;
     }
 
     /**
@@ -92,11 +138,11 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     /**
      * @param Throwable $th
      * @param ServerRequestInterface $request
-     * @param string $contentType
+     * @param string|null $contentType
      * @return ResponseInterface
      * @throws InvalidArgumentException
      */
-    private function handleException(Throwable $th, ServerRequestInterface $request, string $contentType): ResponseInterface
+    private function handleException(Throwable $th, ServerRequestInterface $request, ?string $contentType): ResponseInterface
     {
         $statusCode = 500;
         $error = [];
@@ -125,6 +171,6 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         $response = $this->responseFactory->createResponse();
         $body = $this->streamFactory->createStream(json_encode($error));
 
-        return $response->withBody($body)->withStatus($statusCode)->withAddedHeader('Content-Type', $contentType);
+        return $response->withBody($body)->withStatus($statusCode)->withAddedHeader('Content-Type', $contentType ?? 'application/json');
     }
 }
