@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock\Tests\Unit;
 
+use Cschindl\OpenAPIMock\Exception\Routing;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
 use InvalidArgumentException;
 use Laminas\Diactoros\ResponseFactory;
@@ -14,7 +15,6 @@ use org\bovigo\vfs\vfsStreamException;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
-use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -33,11 +33,6 @@ class OpenApiMockMiddlewareTest extends TestCase
      */
     private $handler;
 
-    /**
-     * @var CacheItemPoolInterface&ObjectProphecy
-     */
-    private $cache;
-
     public function setUp(): void
     {
         parent::setUp();
@@ -47,7 +42,6 @@ class OpenApiMockMiddlewareTest extends TestCase
         $this->request->getMethod()->willReturn('GET');
 
         $this->handler = $this->prophesize(RequestHandlerInterface::class);
-        $this->cache = $this->prophesize(CacheItemPoolInterface::class);
     }
 
     /**
@@ -69,10 +63,35 @@ class OpenApiMockMiddlewareTest extends TestCase
     /**
      * @return void
      */
+    public function testMiddlewareforNoResourceProvidedError(): void
+    {
+        $yaml = <<<YAML
+openapi: 3.0.0
+YAML;
+
+        $middleware = new OpenApiMockMiddleware(
+            new ResponseFactory(),
+            new StreamFactory(),
+            null,
+            $this->createYamlFileWithContent($yaml),
+            []
+        );
+
+        $this->expectException(Routing::class);
+        $this->expectExceptionMessage('Route not resolved, no server matched');
+
+        $middleware->process($this->request->reveal(), $this->handler->reveal());
+    }
+
+    /**
+     * @return void
+     */
     public function testMiddlewareNoRessourceProvidedError(): void
     {
         $yaml = <<<YAML
 openapi: 3.0.1
+servers:
+    - url: https://localhost
 paths:
 YAML;
 
@@ -84,10 +103,10 @@ YAML;
             []
         );
 
-        $response = $middleware->process($this->request->reveal(), $this->handler->reveal());
+        $this->expectException(Routing::class);
+        $this->expectExceptionMessage('Route not resolved, no path matched');
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
-        self::assertEquals('', $response->getBody()->getContents());
+        $middleware->process($this->request->reveal(), $this->handler->reveal());
     }
 
     /**

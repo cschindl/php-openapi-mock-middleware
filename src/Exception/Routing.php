@@ -47,4 +47,11 @@ class Routing extends Exception
 
         return new self(self::NO_RESOURCE_PROVIDED_ERROR, $message, 404);
     }
+
+    public static function forNoServerMatched(): self
+    {
+        $message = sprintf("Route not resolved, no server matched");
+
+        return new self(self::NO_SERVER_MATCHED_ERROR, $message, 404);
+    }
 }

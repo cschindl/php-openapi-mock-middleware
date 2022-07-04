@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock;
 
-use cebe\openapi\exceptions\TypeErrorException;
-use cebe\openapi\exceptions\UnresolvableReferenceException;
 use cebe\openapi\spec\OpenApi;
 use Cschindl\OpenAPIMock\Exception\NoSchemaFileFound;
 use Cschindl\OpenAPIMock\Exception\Routing;
 use InvalidArgumentException;
-use League\OpenAPIValidation\PSR7\SchemaFactory\YamlFactory;
+use League\OpenAPIValidation\PSR7\OperationAddress;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -50,6 +48,16 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     private $options;
 
     /**
+     * @var OperationAddress 
+     */
+    private $requestOperation;
+
+    /**
+     * @var OpenApi 
+     */
+    private $schema;
+
+    /**
      * @param ResponseFactoryInterface $responseFactory
      * @param StreamFactoryInterface $streamFactory
      * @param CacheItemPoolInterface|null $cache
@@ -77,80 +85,82 @@ class OpenApiMockMiddleware implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $statusCode = "200";
+        $contentType = 'application/json';
+
         try {
-            $schema = $this->createSchema();
-            $this->checkSchema($schema);
+            $this->validateRequest($request);
 
-            $faker = OpenAPIFaker::createFromSchema($schema);
-            $faker->setOptions($this->options);
+            $response = $this->processRequest($statusCode, $contentType);
 
-            $path = htmlentities($request->getUri()->getPath());
-            $query = (!empty($request->getUri()->getQuery()) ? '?' . $request->getUri()->getQuery() : '');
+            $this->validateResponse($response);
 
-            $method =  $request->getMethod();
-            $statusCode = "200";
-            $contentType = 'application/json';
-
-            $fakeData = $faker->mockResponse($path . $query, $method, $statusCode, $contentType);
+            return $response;
         } catch (Throwable $th) {
-            return $this->handleException($th, $request, $contentType ?? 'application/json');
+            throw $th;
+            return $this->handleException($th, $request, $contentType);
         }
-
-        return $this->handleSuccess($fakeData, $contentType);
     }
 
-    /**
-     * @return OpenApi
-     * @throws NoSchemaFileFound
-     * @throws TypeErrorException
-     * @throws UnresolvableReferenceException
-     */
-    private function createSchema(): OpenApi
+    private function validateRequest(ServerRequestInterface $request): void
     {
         if (!file_exists($this->pathToYaml)) {
             throw NoSchemaFileFound::forFilename($this->pathToYaml);
         }
 
-        if ($this->cache !== null) {
-            $cacheItem = $this->cache->getItem(md5_file($this->pathToYaml));
-            if ($cacheItem->isHit()) {
-                return $cacheItem->get();
-            }
+        $yaml = file_get_contents($this->pathToYaml);
+        $builder = (new \League\OpenAPIValidation\PSR7\ValidatorBuilder)->fromYaml($yaml);
+
+        if ($this->cache instanceof CacheItemPoolInterface) {
+            $builder = $builder->setCache($this->cache);
         }
 
-        $schema = (new YamlFactory(file_get_contents($this->pathToYaml)))->createSchema();
+        $validator = $builder->getServerRequestValidator();
 
-        if (isset($cacheItem)) {
-            $cacheItem->set($schema);
-            $this->cache->save($cacheItem);
+        $schema = $validator->getSchema();
+        if (!isset($schema->servers) || empty($schema->servers) || $schema->servers[0]->url === '/') {
+            throw Routing::forNoServerMatched();
         }
-
-        return $schema;
-    }
-
-    /**
-     * @param OpenApi $schema
-     * @return void
-     */
-    private function checkSchema(OpenApi $schema): void
-    {
         if (!isset($schema->paths) || empty($schema->paths)) {
             throw Routing::forNoResourceProvided();
         }
+
+        $this->requestOperation = $validator->validate($request);
+        $this->schema = $validator->getSchema();
     }
 
-    /**
-     * @param array $data
-     * @param string $contentType
-     * @return ResponseInterface
-     * @throws InvalidArgumentException
-     */
-    private function handleSuccess(array $data, string $contentType): ResponseInterface
+    private function processRequest(string $statusCode = '200', string $contentType = 'application/json'): ResponseInterface
     {
+        $faker = OpenAPIFaker::createFromSchema($this->schema);
+        $faker->setOptions($this->options);
+
+        $path = $this->requestOperation->path();
+        $method = $this->requestOperation->method();;
+
+        $fakeData = $faker->mockResponse($path, $method, $statusCode, $contentType);
+
         $response = $this->responseFactory->createResponse();
-        $body = $this->streamFactory->createStream(json_encode($data));
+        $body = $this->streamFactory->createStream(json_encode($fakeData));
 
         return $response->withBody($body)->withAddedHeader('Content-Type', $contentType);
+    }
+
+    private function validateResponse(ResponseInterface $response): void
+    {
+        if (!file_exists($this->pathToYaml)) {
+            throw NoSchemaFileFound::forFilename($this->pathToYaml);
+        }
+
+        $yaml = file_get_contents($this->pathToYaml);
+        $builder = (new \League\OpenAPIValidation\PSR7\ValidatorBuilder)->fromYaml($yaml);
+
+        if ($this->cache instanceof CacheItemPoolInterface) {
+            $builder = $builder->setCache($this->cache);
+        }
+
+        $validator = $builder->getResponseValidator();
+
+        $validator->validate($this->requestOperation, $response);
     }
 
     /**
