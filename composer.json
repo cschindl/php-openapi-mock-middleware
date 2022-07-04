@@ -27,6 +27,7 @@
     },
     "require-dev": {
         "laminas/laminas-diactoros": "^2.11",
+        "mikey179/vfsstream": "^1.6",
         "phpspec/prophecy": "^1.15",
         "phpspec/prophecy-phpunit": "^2.0",
         "phpstan/phpstan": "^1.7",

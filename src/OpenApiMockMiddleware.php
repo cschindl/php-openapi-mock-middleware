@@ -6,8 +6,11 @@ namespace Cschindl\OpenAPIMock;
 
 use cebe\openapi\exceptions\TypeErrorException;
 use cebe\openapi\exceptions\UnresolvableReferenceException;
+use cebe\openapi\spec\OpenApi;
 use Cschindl\OpenAPIMock\Exception\NoSchemaFileFound;
+use Cschindl\OpenAPIMock\Exception\Routing;
 use InvalidArgumentException;
+use League\OpenAPIValidation\PSR7\SchemaFactory\YamlFactory;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -75,11 +78,15 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         try {
-            $faker = $this->createFaker();
+            $schema = $this->createSchema();
+            $this->checkSchema($schema);
+
+            $faker = OpenAPIFaker::createFromSchema($schema);
             $faker->setOptions($this->options);
 
             $path = htmlentities($request->getUri()->getPath());
             $query = (!empty($request->getUri()->getQuery()) ? '?' . $request->getUri()->getQuery() : '');
+
             $method =  $request->getMethod();
             $statusCode = "200";
             $contentType = 'application/json';
@@ -93,32 +100,43 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @return OpenAPIFaker
+     * @return OpenApi
      * @throws NoSchemaFileFound
      * @throws TypeErrorException
      * @throws UnresolvableReferenceException
      */
-    private function createFaker(): OpenAPIFaker
+    private function createSchema(): OpenApi
     {
         if (!file_exists($this->pathToYaml)) {
             throw NoSchemaFileFound::forFilename($this->pathToYaml);
         }
 
         if ($this->cache !== null) {
-            $cacheItem =  $this->cache->getItem(md5_file($this->pathToYaml));
+            $cacheItem = $this->cache->getItem(md5_file($this->pathToYaml));
             if ($cacheItem->isHit()) {
                 return $cacheItem->get();
             }
         }
 
-        $faker = OpenAPIFaker::createFromYaml(file_get_contents($this->pathToYaml));
+        $schema = (new YamlFactory(file_get_contents($this->pathToYaml)))->createSchema();
 
-        if ($cacheItem !== null) {
-            $cacheItem->set($faker);
+        if (isset($cacheItem)) {
+            $cacheItem->set($schema);
             $this->cache->save($cacheItem);
         }
 
-        return $faker;
+        return $schema;
+    }
+
+    /**
+     * @param OpenApi $schema
+     * @return void
+     */
+    private function checkSchema(OpenApi $schema): void
+    {
+        if (!isset($schema->paths) || empty($schema->paths)) {
+            throw Routing::forNoResourceProvided();
+        }
     }
 
     /**
