@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Cschindl\OpenAPIMock;
 
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\Exception\NoSchemaFileFound;
-use Cschindl\OpenAPIMock\Exception\Routing;
+use Cschindl\OpenAPIMock\Exception\RoutingException;
 use InvalidArgumentException;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
@@ -20,7 +19,7 @@ class RequestValidator
     /**
      * @var string
      */
-    private $pathToYaml;
+    private $pathToSpecFile;
 
     /**
      * @var CacheItemPoolInterface|null
@@ -38,45 +37,44 @@ class RequestValidator
     private $schema;
 
     /**
-     * @param string $pathToYaml
+     * @param string $pathToSpecFile
      * @param CacheItemPoolInterface|null $cache
      */
-    private function __construct(string $pathToYaml, ?CacheItemPoolInterface $cache = null)
+    private function __construct(string $pathToSpecFile, ?CacheItemPoolInterface $cache = null)
     {
-        $this->pathToYaml = $pathToYaml;
+        $this->pathToSpecFile = $pathToSpecFile;
         $this->cache = $cache;
     }
 
     /**
-     * @param string $pathToYaml
+     * @param string $pathToSpecFile
      * @param CacheItemPoolInterface|null $cache
      * @return RequestValidator
      */
-    public static function fromPath(string $pathToYaml, ?CacheItemPoolInterface $cache = null): self
+    public static function fromPath(string $pathToSpecFile, ?CacheItemPoolInterface $cache = null): self
     {
-        return new RequestValidator($pathToYaml, $cache);
+        return new RequestValidator($pathToSpecFile, $cache);
     }
 
     /**
-     * @param string $pathToYaml
      * @param ServerRequestInterface $request
      * @return OperationAddress
-     * @throws NoSchemaFileFound
      * @throws InvalidArgumentException
-     * @throws Routing
+     * @throws RoutingException
      * @throws ValidationFailed
      */
     public function validateRequest(ServerRequestInterface $request): OperationAddress
     {
-        $validator = $this->createValidator($this->pathToYaml);
+        $validator = $this->createValidator($this->pathToSpecFile);
 
         $this->schema = $validator->getSchema();
 
         if (!isset($this->schema->servers) || empty($this->schema->servers) || $this->schema->servers[0]->url === '/') {
-            throw Routing::forNoServerMatched();
+            throw RoutingException::forNoServerMatched();
         }
+
         if (!isset($this->schema->paths) || empty($this->schema->paths)) {
-            throw Routing::forNoResourceProvided();
+            throw RoutingException::forNoResourceProvided();
         }
 
         return $validator->validate($request);
@@ -91,22 +89,17 @@ class RequestValidator
     }
 
     /**
-     * @param string $pathToYaml
+     * @param string $pathToSpecFile
      * @return ServerRequestValidator
-     * @throws NoSchemaFileFound
      * @throws InvalidArgumentException
      */
-    private function createValidator(string $pathToYaml): ServerRequestValidator
+    private function createValidator(string $pathToSpecFile): ServerRequestValidator
     {
         if ($this->validator instanceof ServerRequestValidator) {
             return $this->validator;
         }
 
-        if (!file_exists($pathToYaml)) {
-            throw NoSchemaFileFound::forFilename($pathToYaml);
-        }
-
-        $yaml = file_get_contents($pathToYaml);
+        $yaml = file_get_contents($pathToSpecFile);
         $builder = (new ValidatorBuilder())->fromYaml($yaml);
 
         if ($this->cache instanceof CacheItemPoolInterface) {

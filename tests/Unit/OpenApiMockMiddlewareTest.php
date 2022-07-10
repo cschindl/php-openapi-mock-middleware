@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Cschindl\OpenAPIMock\Tests\Unit;
 
 use cebe\openapi\spec\OpenApi;
+use Cschindl\OpenAPIMock\ErrorResponseGenerator;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
 use Cschindl\OpenAPIMock\RequestValidator;
 use Cschindl\OpenAPIMock\ResponseFaker;
@@ -42,10 +43,13 @@ class OpenApiMockMiddlewareTest extends TestCase
             $this->prophesize(ResponseInterface::class)->reveal()
         );
 
+        $errorResponseGenerator = $this->prophesize(ErrorResponseGenerator::class);
+
         $middleware = new OpenApiMockMiddleware(
             $requestValidator->reveal(),
             $responseValidator->reveal(),
-            $responseFaker->reveal()
+            $responseFaker->reveal(),
+            $errorResponseGenerator->reveal()
         );
 
         $response = $middleware->process($request->reveal(), $handler->reveal());

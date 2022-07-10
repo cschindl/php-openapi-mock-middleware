@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Cschindl\OpenAPIMock;
 
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\Exception\NoSchemaFileFound;
 use InvalidArgumentException;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
@@ -19,7 +18,7 @@ class ResponseValidator
     /**
      * @var string
      */
-    private $pathToYaml;
+    private $pathToSpecFile;
 
     /**
      * @var CacheItemPoolInterface|null
@@ -37,36 +36,34 @@ class ResponseValidator
     private $schema;
 
     /**
-     * @param string $pathToYaml
+     * @param string $pathToSpecFile
      * @param CacheItemPoolInterface|null $cache
      */
-    private function __construct(string $pathToYaml, ?CacheItemPoolInterface $cache = null)
+    private function __construct(string $pathToSpecFile, ?CacheItemPoolInterface $cache = null)
     {
-        $this->pathToYaml = $pathToYaml;
+        $this->pathToSpecFile = $pathToSpecFile;
         $this->cache = $cache;
     }
 
     /**
-     * @param string $pathToYaml
+     * @param string $pathToSpecFile
      * @param CacheItemPoolInterface|null $cache
      * @return ResponseValidator
      */
-    public static function fromPath(string $pathToYaml, ?CacheItemPoolInterface $cache = null): self
+    public static function fromPath(string $pathToSpecFile, ?CacheItemPoolInterface $cache = null): self
     {
-        return new ResponseValidator($pathToYaml, $cache);
+        return new ResponseValidator($pathToSpecFile, $cache);
     }
 
     /**
-     * @param string $pathToYaml
      * @param OperationAddress $operationAddress
      * @param ResponseInterface $response
-     * @throws NoSchemaFileFound
      * @throws InvalidArgumentException
      * @throws ValidationFailed
      */
     public function validateResonse(OperationAddress $operationAddress, ResponseInterface $response): void
     {
-        $validator = $this->createValidator($this->pathToYaml);
+        $validator = $this->createValidator($this->pathToSpecFile);
 
         $this->schema = $validator->getSchema();
 
@@ -82,22 +79,17 @@ class ResponseValidator
     }
 
     /**
-     * @param string $pathToYaml
+     * @param string $pathToSpecFile
      * @return PSR7ResponseValidator
-     * @throws NoSchemaFileFound
      * @throws InvalidArgumentException
      */
-    private function createValidator(string $pathToYaml): PSR7ResponseValidator
+    private function createValidator(string $pathToSpecFile): PSR7ResponseValidator
     {
         if ($this->validator instanceof PSR7ResponseValidator) {
             return $this->validator;
         }
 
-        if (!file_exists($pathToYaml)) {
-            throw NoSchemaFileFound::forFilename($pathToYaml);
-        }
-
-        $yaml = file_get_contents($pathToYaml);
+        $yaml = file_get_contents($pathToSpecFile);
         $builder = (new ValidatorBuilder())->fromYaml($yaml);
 
         if ($this->cache instanceof CacheItemPoolInterface) {
