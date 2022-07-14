@@ -7,7 +7,7 @@ namespace Cschindl\OpenAPIMock\Exception;
 use InvalidArgumentException;
 use Throwable;
 
-class ValidationException extends InvalidArgumentException
+class ValidationException extends InvalidArgumentException implements RFC7807Interface
 {
     private const UNPROCESSABLE_ENTITY = 'UNPROCESSABLE_ENTITY';
     private const NOT_ACCEPTABLE = 'NOT_ACCEPTABLE';
@@ -20,16 +20,22 @@ class ValidationException extends InvalidArgumentException
     private $type;
 
     /**
+     * @var string
+     */
+    private $title;
+
+    /**
      * @param string $type
      * @param string $message
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct(string $type, string $message = "", int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $type, string $title, string $detail = "", int $code = 0, ?Throwable $previous = null)
     {
-        parent::__construct($message, $code, $previous);
+        parent::__construct($detail, $code, $previous);
 
         $this->type = $type;
+        $this->title = $title;
     }
 
     /**
@@ -41,13 +47,28 @@ class ValidationException extends InvalidArgumentException
     }
 
     /**
+     * @return string
+     */
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    /**
      * @return ValidationException
      */
-    public static function forUnprocessableEntity(): self
+    public static function forUnprocessableEntity(Throwable $previous): self
     {
-        $message = sprintf("Invalid request");
+        $title = sprintf("Invalid request");
+        
+        $detail = [];
+        $detail[] = $previous->getMessage();
 
-        return new self(self::UNPROCESSABLE_ENTITY, $message, 422);
+        if ($previous->getPrevious() !== null) {
+            $detail[] = $previous->getPrevious()->getMessage();
+        }
+
+        return new self(self::UNPROCESSABLE_ENTITY, $title, implode('\n', $detail), 422, $previous);
     }
 
     /**

@@ -10,10 +10,7 @@ use Throwable;
 class RoutingException extends InvalidArgumentException
 {
     private const NO_RESOURCE_PROVIDED_ERROR = 'NO_RESOURCE_PROVIDED_ERROR';
-    private const NO_PATH_MATCHED_ERROR = 'NO_PATH_MATCHED_ERROR';
-    private const NO_SERVER_MATCHED_ERROR = 'NO_SERVER_MATCHED_ERROR';
-    private const NO_METHOD_MATCHED_ERROR = 'NO_METHOD_MATCHED_ERROR';
-    private const NO_SERVER_CONFIGURATION_PROVIDED_ERROR = 'NO_SERVER_CONFIGURATION_PROVIDED_ERROR';
+    private const NO_PATH_AND_METHOD_MATCHED_ERROR = 'NO_PATH_AND_METHOD_MATCHED_ERROR';
 
     /**
      * @var string
@@ -46,7 +43,7 @@ class RoutingException extends InvalidArgumentException
      */
     public static function forNoResourceProvided(): self
     {
-        $message = sprintf("Route not resolved, no resource provided");
+        $message = "Route not resolved, no resource provided";
 
         return new self(self::NO_RESOURCE_PROVIDED_ERROR, $message, 404);
     }
@@ -54,40 +51,10 @@ class RoutingException extends InvalidArgumentException
     /**
      * @return RoutingException
      */
-    public static function forNoPathMatched(): self
+    public static function forNoPathAndMethodMatched(): self
     {
-        $message = sprintf("Route not resolved, no path matched");
+        $message = "Route not resolved, no path and method matched";
 
-        return new self(self::NO_PATH_MATCHED_ERROR, $message, 404);
-    }
-
-    /**
-     * @return RoutingException
-     */
-    public static function forNoServerMatched(): self
-    {
-        $message = sprintf("Route not resolved, no server matched");
-
-        return new self(self::NO_SERVER_MATCHED_ERROR, $message, 404);
-    }
-
-    /**
-     * @return RoutingException
-     */
-    public static function forNoMethodMatched(): self
-    {
-        $message = sprintf("Route resolved, but no path matched");
-
-        return new self(self::NO_METHOD_MATCHED_ERROR, $message, 405);
-    }
-
-    /**
-     * @return RoutingException
-     */
-    public static function forNoServerConfigurationProvided(): self
-    {
-        $message = sprintf("Route not resolved, no server configuration provided");
-
-        return new self(self::NO_SERVER_CONFIGURATION_PROVIDED_ERROR, $message, 404);
+        return new self(self::NO_PATH_AND_METHOD_MATCHED_ERROR, $message, 405);
     }
 }

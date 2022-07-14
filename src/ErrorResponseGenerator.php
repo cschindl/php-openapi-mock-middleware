@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock;
 
+use Cschindl\OpenAPIMock\Exception\RFC7807Interface;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Throwable;
-use Vural\OpenAPIFaker\Exception\NoPath;
 
 class ErrorResponseGenerator
 {
@@ -45,33 +45,27 @@ class ErrorResponseGenerator
      */
     public function handleException(Throwable $th, ServerRequestInterface $request, ?string $contentType): ResponseInterface
     {
-        $statusCode = 500;
-        $error = [];
-
-        switch (get_class($th)) {
-            case NoPath::class:
-                $error = [
-                    "type" => "NO_PATH_MATCHED_ERROR",
-                    "title" => "Route not resolved, no path matched",
-                    "detail" => sprintf("The route %s hasn't been found in the specification file", $request->getUri()->getPath()),
-                    "status" => 404,
-                ];
-                $statusCode = 404;
-                break;
-            default:
-                $error = [
-                    "type" => "ERROR",
-                    "title" => "Unexpected error occurred",
-                    "detail" => $th->getMessage(),
-                    "status" => 500,
-                ];
-                $statusCode = 500;
-                break;
+        if ($th instanceof RFC7807Interface) {
+            $error = [
+                "type" => $th->getType(),
+                "title" => $th->getTitle(),
+                "detail" => $th->getMessage(),
+                "status" => $th->getCode(),
+            ];
+            $statusCode =  $th->getCode();
+        } else {
+            $error = [
+                "type" => "ERROR",
+                "title" => "Unexpected error occurred",
+                "detail" => $th->getMessage(),
+                "status" => 500,
+            ];
+            $statusCode = 500;
         }
 
         $response = $this->responseFactory->createResponse();
         $body = $this->streamFactory->createStream(json_encode($error));
 
-        return $response->withBody($body)->withStatus($statusCode)->withAddedHeader('Content-Type', $contentType ?? 'application/json');
+        return $response->withBody($body)->withStatus($statusCode)->withAddedHeader('Content-Type', $contentType ?? 'application/problem+json');
     }
 }

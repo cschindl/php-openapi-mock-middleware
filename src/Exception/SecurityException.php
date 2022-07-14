@@ -7,7 +7,7 @@ namespace Cschindl\OpenAPIMock\Exception;
 use InvalidArgumentException;
 use Throwable;
 
-class SecurityException extends InvalidArgumentException
+class SecurityException extends InvalidArgumentException implements RFC7807Interface
 {
     private const UNAUTHORIZED = 'UNAUTHORIZED';
 
@@ -17,16 +17,22 @@ class SecurityException extends InvalidArgumentException
     private $type;
 
     /**
+     * @var string
+     */
+    private $title;
+
+    /**
      * @param string $type
      * @param string $message
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct(string $type, string $message = "", int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $type, string $title, string $detail = "", int $code = 0, ?Throwable $previous = null)
     {
-        parent::__construct($message, $code, $previous);
+        parent::__construct($detail, $code, $previous);
 
         $this->type = $type;
+        $this->title = $title;
     }
 
     /**
@@ -38,12 +44,21 @@ class SecurityException extends InvalidArgumentException
     }
 
     /**
+     * @return string
+     */
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    /**
+     * @param Throwable|null $previous
      * @return SecurityException
      */
-    public static function forUnauthorized(): self
+    public static function forUnauthorized(Throwable $previous = null): self
     {
-        $message = sprintf("Invalid security scheme used");
+        $title = "Invalid security scheme used";
 
-        return new self(self::UNAUTHORIZED, $message, 401);
+        return new self(self::UNAUTHORIZED, $title, $previous !== null ? $previous->getMessage() : $title, 401, $previous);
     }
 }
