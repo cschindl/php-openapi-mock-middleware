@@ -4,63 +4,23 @@ declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock\Exception;
 
-use InvalidArgumentException;
 use Throwable;
 
-class ValidationException extends InvalidArgumentException implements RFC7807Interface
+class ValidationException extends RequestException
 {
-    private const UNPROCESSABLE_ENTITY = 'UNPROCESSABLE_ENTITY';
-    private const NOT_ACCEPTABLE = 'NOT_ACCEPTABLE';
-    private const NOT_FOUND = 'NOT_FOUND';
-    private const VIOLATIONS = 'VIOLATIONS';
+    public const UNPROCESSABLE_ENTITY = 'UNPROCESSABLE_ENTITY';
+    public const NOT_ACCEPTABLE = 'NOT_ACCEPTABLE';
+    public const NOT_FOUND = 'NOT_FOUND';
+    public const VIOLATIONS = 'VIOLATIONS';
 
     /**
-     * @var string
-     */
-    private $type;
-
-    /**
-     * @var string
-     */
-    private $title;
-
-    /**
-     * @param string $type
-     * @param string $message
-     * @param int $code
      * @param Throwable|null $previous
-     */
-    public function __construct(string $type, string $title, string $detail = "", int $code = 0, ?Throwable $previous = null)
-    {
-        parent::__construct($detail, $code, $previous);
-
-        $this->type = $type;
-        $this->title = $title;
-    }
-
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @return string
-     */
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
-
-    /**
      * @return ValidationException
      */
-    public static function forUnprocessableEntity(Throwable $previous): self
+    public static function forUnprocessableEntity(?Throwable $previous = null): self
     {
-        $title = sprintf("Invalid request");
-        
+        $title = 'Invalid request';
+
         $detail = [];
         $detail[] = $previous->getMessage();
 
@@ -72,32 +32,38 @@ class ValidationException extends InvalidArgumentException implements RFC7807Int
     }
 
     /**
+     * @param Throwable|null $previous
      * @return ValidationException
      */
-    public static function forNotAcceptable(): self
+    public static function forNotAcceptable(?Throwable $previous = null): self
     {
-        $message = sprintf("The server cannot produce a representation for your accept header");
+        $title = 'The server cannot produce a representation for your accept header';
+        $detail = $previous !== null ? $previous->getMessage() : '';
 
-        return new self(self::NOT_ACCEPTABLE, $message, 406);
+        return new self(self::NOT_ACCEPTABLE, $title, $detail, 406, $previous);
     }
 
     /**
+     * @param Throwable|null $previous
      * @return ValidationException
      */
-    public static function forNotFound(): self
+    public static function forNotFound(?Throwable $previous = null): self
     {
-        $message = sprintf("The server cannot find the requested content");
+        $title = 'The server cannot find the requested content';
+        $detail = $previous !== null ? $previous->getMessage() : '';
 
-        return new self(self::NOT_FOUND, $message, 404);
+        return new self(self::NOT_FOUND, $title, $detail, 404, $previous);
     }
 
     /**
+     * @param Throwable|null $previous
      * @return ValidationException
      */
-    public static function forViolations(): self
+    public static function forViolations(?Throwable $previous = null): self
     {
-        $message = sprintf("Request/Response not valid");
+        $title = 'Request/Response not valid';
+        $detail = $previous !== null ? $previous->getMessage() : '';
 
-        return new self(self::VIOLATIONS, $message, 500);
+        return new self(self::VIOLATIONS, $title, $detail, 500, $previous);
     }
 }

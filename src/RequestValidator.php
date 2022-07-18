@@ -6,22 +6,13 @@ namespace Cschindl\OpenAPIMock;
 
 use cebe\openapi\spec\OpenApi;
 use Cschindl\OpenAPIMock\Exception\RoutingException;
-use Cschindl\OpenAPIMock\Exception\SecurityException;
-use Cschindl\OpenAPIMock\Exception\ValidationException;
 use InvalidArgumentException;
-use League\OpenAPIValidation\PSR7\Exception\NoOperation;
-use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidBody;
-use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidSecurity;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ServerRequestValidator;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
-use League\OpenAPIValidation\Schema\Exception\KeywordMismatch;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Throwable;
-
-use function PHPUnit\Framework\throwException;
 
 class RequestValidator
 {
@@ -67,12 +58,12 @@ class RequestValidator
 
     /**
      * @param ServerRequestInterface $request
-     * @return OperationAddress|null
+     * @return OperationAddress
      * @throws InvalidArgumentException
      * @throws RoutingException
      * @throws ValidationFailed
      */
-    public function validateRequest(ServerRequestInterface $request): ?OperationAddress
+    public function validateRequest(ServerRequestInterface $request): OperationAddress
     {
         $validator = $this->createValidator($this->pathToSpecFile);
 
@@ -82,11 +73,7 @@ class RequestValidator
             throw RoutingException::forNoResourceProvided();
         }
 
-        try {
-            return $validator->validate($request);
-        } catch (Throwable $th) {
-            $this->mapException($th, $request);
-        }
+        return $validator->validate($request);
     }
 
     /**
@@ -116,22 +103,5 @@ class RequestValidator
         }
 
         return $builder->getServerRequestValidator();
-    }
-
-    /**
-     * @param Throwable $th
-     * @throws SecurityException
-     * @throws SecurityException
-     */
-    private function mapException(Throwable $th, ServerRequestInterface $request): void
-    {
-        switch (get_class($th)) {
-            case InvalidSecurity::class:
-                throw SecurityException::forUnauthorized($th);
-            case NoOperation::class:
-                throw RoutingException::forNoPathAndMethodMatched($th);
-            case InvalidBody::class:
-                throw ValidationException::forUnprocessableEntity($th);
-        }
     }
 }

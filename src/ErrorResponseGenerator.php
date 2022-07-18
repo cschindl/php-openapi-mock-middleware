@@ -38,12 +38,11 @@ class ErrorResponseGenerator
 
     /**
      * @param Throwable $th
-     * @param ServerRequestInterface $request
      * @param string|null $contentType
      * @return ResponseInterface
      * @throws InvalidArgumentException
      */
-    public function handleException(Throwable $th, ServerRequestInterface $request, ?string $contentType): ResponseInterface
+    public function handleException(Throwable $th, ?string $contentType): ResponseInterface
     {
         if ($th instanceof RFC7807Interface) {
             $error = [

@@ -54,6 +54,39 @@ class ResponseFaker
     /**
      * @param OpenApi $schema
      * @param OperationAddress $operationAddress
+     * @param array|string $statusCodes
+     * @param string $contentType
+     * @return ResponseInterface
+     * @throws NoResponse
+     * @throws NoPath
+     * @throws InvalidArgumentException
+     */
+    public function mockPossibleResponse(
+        OpenApi $schema,
+        OperationAddress $operationAddress,
+        $statusCodes,
+        string $contentType = 'application/json'
+    ): ResponseInterface {
+        if (is_string($statusCodes)) {
+            $statusCodes = [$statusCodes];
+        }
+
+        $statusCode = array_shift($statusCodes);
+
+        try {
+            return $this->mockResponse($schema, $operationAddress, $statusCode, $contentType);
+        } catch (NoResponse | NoPath $th) {
+            if (empty($statusCodes)) {
+                throw $th;
+            }
+
+            return $this->mockPossibleResponse($schema, $operationAddress, $statusCodes, $contentType);
+        }
+    }
+
+    /**
+     * @param OpenApi $schema
+     * @param OperationAddress $operationAddress
      * @param string $statusCode
      * @param string $contentType
      * @return ResponseInterface
@@ -61,7 +94,7 @@ class ResponseFaker
      * @throws NoResponse
      * @throws InvalidArgumentException
      */
-    public function mockResponse(
+    private function mockResponse(
         OpenApi $schema,
         OperationAddress $operationAddress,
         string $statusCode = '200',
@@ -70,14 +103,14 @@ class ResponseFaker
         $faker = $this->createFaker($schema);
 
         $path = $operationAddress->path();
-        $method = $operationAddress->method();;
+        $method = $operationAddress->method();
 
         $fakeData = $faker->mockResponse($path, $method, $statusCode, $contentType);
 
         $response = $this->responseFactory->createResponse();
         $body = $this->streamFactory->createStream(json_encode($fakeData));
 
-        return $response->withBody($body)->withAddedHeader('Content-Type', $contentType);
+        return $response->withBody($body)->withAddedHeader('Content-Type', $contentType)->withStatus($statusCode);
     }
 
     /**
