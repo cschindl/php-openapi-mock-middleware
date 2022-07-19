@@ -7,6 +7,7 @@ namespace Cschindl\OpenAPIMock;
 use cebe\openapi\spec\OpenApi;
 use Cschindl\OpenAPIMock\Exception\RoutingException;
 use InvalidArgumentException;
+use League\OpenAPIValidation\PSR7\Exception\NoPath;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ServerRequestValidator;
@@ -70,7 +71,7 @@ class RequestValidator
         $this->schema = $validator->getSchema();
 
         if (!isset($this->schema->paths) || empty($this->schema->paths)) {
-            throw RoutingException::forNoResourceProvided();
+            throw RoutingException::forNoResourceProvided(NoPath::fromPath($request->getUri()->getPath()));
         }
 
         return $validator->validate($request);

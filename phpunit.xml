@@ -19,10 +19,10 @@
     </include>
   </coverage>
   <testsuites>
-    <testsuite name="Unit tests">
+    <testsuite name="Unit">
       <directory>tests/Unit</directory>
     </testsuite>
-    <testsuite name="Integration tests">
+    <testsuite name="Integration">
       <directory>tests/Integration</directory>
     </testsuite>
   </testsuites>

@@ -5,184 +5,133 @@ declare(strict_types=1);
 namespace Cschindl\OpenAPIMock\Tests\Unit;
 
 use Cschindl\OpenAPIMock\Exception\RoutingException;
-use Cschindl\OpenAPIMock\Exception\ValidationException;
 use Cschindl\OpenAPIMock\RequestValidator;
 use InvalidArgumentException;
-use Laminas\Diactoros\Uri;
+use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
+use League\OpenAPIValidation\PSR7\OperationAddress;
+use Nyholm\Psr7\Uri;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamException;
 use PHPUnit\Framework\TestCase;
-use Prophecy\Exception\Doubler\DoubleException;
-use Prophecy\Exception\Doubler\InterfaceNotFoundException;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\StreamInterface;
 
 class RequestValidatorTest extends TestCase
 {
-  use ProphecyTrait;
+    use ProphecyTrait;
 
-  /**
-   * @var ServerRequestInterface&ObjectProphecy
-   */
-  private $request;
+    /**
+     * @return void
+     */
+    public function testValidateRequest(): void
+    {
+        /** @var ServerRequestInterface&ObjectProphecy */
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/pet'));
+        $request->getMethod()->willReturn('GET');
+        $request->getCookieParams()->willReturn([]);
+        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getQueryParams()->willReturn([]);
 
-  /**
-   * @throws DoubleException
-   * @throws InterfaceNotFoundException
-   */
-  public function setUp(): void
-  {
-    parent::setUp();
-
-    /** @var ServerRequestInterface */
-    $this->request = $this->prophesize(ServerRequestInterface::class);
-    $this->request->getCookieParams()->willReturn([]);
-    $this->request->getHeader('Content-Type')->willReturn(['application/json']);
-    $this->request->getQueryParams()->willReturn([]);
-  }
-
-  /**
-   * @return void
-   */
-  public function testRoutingExceptionForNoResourceProvided(): void
-  {
-    $this->request->getUri()->willReturn(new Uri('http://localhost:4010/pets'));
-    $this->request->getMethod()->willReturn('POST');
-
-    $yaml = <<<YAML
-openapi: 3.0.1
-paths:
-YAML;
-
-    $validator = RequestValidator::fromPath($this->createYamlFileWithContent($yaml), null);
-
-    $this->expectException(RoutingException::class);
-    $this->expectExceptionMessage('Route not resolved, no resource provided');
-
-    $validator->validateRequest($this->request->reveal());
-  }
-
-  /**
-   * @return void
-   */
-  public function testRoutingExceptionForNoPathMatched(): void
-  {
-    $this->request->getUri()->willReturn(new Uri('http://localhost:4010/hello'));
-    $this->request->getMethod()->willReturn('GET');
-
-    $yaml = <<<YAML
-openapi: 3.0.1
-paths:
-  /pets:
-    get:
-      responses:
-        200:
-          description: Hey
-YAML;
-
-    $validator = RequestValidator::fromPath($this->createYamlFileWithContent($yaml), null);
-
-    $this->expectException(RoutingException::class);
-    $this->expectExceptionMessage('Route not resolved, no path and method matched');
-
-    $validator->validateRequest($this->request->reveal());
-  }
-
-  /**
-   * @return void
-   */
-  public function testRoutingExceptionForNoMethodMatched(): void
-  {
-    $this->request->getUri()->willReturn(new Uri('http://localhost:4010/pets'));
-    $this->request->getMethod()->willReturn('POST');
-
-    $yaml = <<<YAML
-openapi: 3.0.1
-paths:
-  /pets:
-    get:
-      responses:
-        200:
-          description: Hey
-YAML;
-
-    $validator = RequestValidator::fromPath($this->createYamlFileWithContent($yaml), null);
-
-    $this->expectException(RoutingException::class);
-    $this->expectExceptionMessage('Route not resolved, no path and method matched');
-
-    $validator->validateRequest($this->request->reveal());
-  }
-
-  /**
-   * @return void
-   */
-  public function testValidationExceptionForUnprocessableEntity(): void
-  {
-    $this->request->getUri()->willReturn(new Uri('http://localhost:4010/pet'));
-    $this->request->getMethod()->willReturn('PUT');
-
-    /** @var StreamInterface */
-    $body = $this->prophesize(StreamInterface::class);
-    $body->__toString()->willReturn('{}');
-    $this->request->getBody()->willReturn($body);
-
-    $yaml = <<<YAML
+        $yaml = <<<YAML
 openapi: 3.0.1
 paths:
   /pet:
-    put:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              "\$ref": "#/components/schemas/Pet"
-        required: true
+    get:
       responses:
-        '200':
+        200:
           content:
             application/json:
               schema:
                 "\$ref": "#/components/schemas/Pet"
-                
+
 components:
   schemas:
     Pet:
       required:
-      - id
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
+        - id
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
 YAML;
 
-    $validator = RequestValidator::fromPath($this->createYamlFileWithContent($yaml), null);
+        $validator = RequestValidator::fromPath($this->createYamlFileWithContent($yaml), null);
 
-    $this->expectException(ValidationException::class);
+        $result = $validator->validateRequest($request->reveal());
+        $this->assertInstanceOf(OperationAddress::class, $result);
+    }
 
-    $message = 'Body does not match schema for content-type "application/json" for Request [put /pet]';
-    $message .= '\nKeyword validation failed: Required property \'id\' must be present in the object';
-    $this->expectExceptionMessage($message);
+    /**
+     * @return void
+     */
+    public function testInValidateRequest(): void
+    {
+        /** @var ServerRequestInterface&ObjectProphecy */
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/hello'));
+        $request->getMethod()->willReturn('GET');
+        $request->getCookieParams()->willReturn([]);
+        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getQueryParams()->willReturn([]);
 
-    $validator->validateRequest($this->request->reveal());
-  }
+        $yaml = <<<YAML
+openapi: 3.0.1
+paths:
+  /pets:
+    get:
+      responses:
+        200:
+          description: Hey
+YAML;
 
-  /**
-   * @param string $content
-   * @return string
-   * @throws vfsStreamException
-   * @throws InvalidArgumentException
-   */
-  private function createYamlFileWithContent(string $content): string
-  {
-    $root = vfsStream::setup('root_dir');
-    $file = vfsStream::newFile('spec.yaml');
-    $file->setContent($content);
-    $root->addChild($file);
+        $validator = RequestValidator::fromPath($this->createYamlFileWithContent($yaml), null);
 
-    return $file->url();
-  }
+        $this->expectException(ValidationFailed::class);
+
+        $validator->validateRequest($request->reveal());
+    }
+
+    /**
+     * @return void
+     */
+    public function testRoutingExceptionForNoResourceProvided(): void
+    {
+        /** @var ServerRequestInterface&ObjectProphecy */
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/pets'));
+        $request->getMethod()->willReturn('POST');
+        $request->getCookieParams()->willReturn([]);
+        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getQueryParams()->willReturn([]);
+
+        $yaml = <<<YAML
+openapi: 3.0.1
+paths:
+YAML;
+
+        $validator = RequestValidator::fromPath($this->createYamlFileWithContent($yaml), null);
+
+        $this->expectException(RoutingException::class);
+
+        $validator->validateRequest($request->reveal());
+    }
+
+    /**
+     * @param string $content
+     * @return string
+     * @throws vfsStreamException
+     * @throws InvalidArgumentException
+     */
+    private function createYamlFileWithContent(string $content): string
+    {
+        $root = vfsStream::setup('root_dir');
+        $file = vfsStream::newFile('spec.yaml');
+        $file->setContent($content);
+        $root->addChild($file);
+
+        return $file->url();
+    }
 }

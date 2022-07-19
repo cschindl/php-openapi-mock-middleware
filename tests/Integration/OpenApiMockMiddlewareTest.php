@@ -1,0 +1,226 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Cschindl\OpenAPIMock\Tests\Integration;
+
+use Cschindl\OpenAPIMock\ErrorResponseGenerator;
+use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
+use Cschindl\OpenAPIMock\RequestValidator;
+use Cschindl\OpenAPIMock\ResponseFaker;
+use Cschindl\OpenAPIMock\ResponseValidator;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7\Uri;
+use org\bovigo\vfs\vfsStream;
+use PHPUnit\Framework\TestCase;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Vural\OpenAPIFaker\Options;
+
+class OpenApiMockMiddlewareTest extends TestCase
+{
+    use ProphecyTrait;
+
+    /**
+     * @return void
+     */
+    public function testHandleValidRequest(): void
+    {
+        /** @var ServerRequestInterface&ObjectProphecy */
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/pets'));
+        $request->getMethod()->willReturn('GET');
+        $request->getCookieParams()->willReturn([]);
+        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getQueryParams()->willReturn([]);
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+
+        $yaml = <<<YAML
+openapi: 3.0.1
+paths:
+  /pets:
+    get:
+      responses:
+        200:
+          description: Hey
+YAML;
+
+        $middleware = $this->createMiddleware($this->createYamlFileWithContent($yaml));
+
+        $response = $middleware->process($request->reveal(), $handler->reveal());
+
+        self::assertInstanceOf(ResponseInterface::class, $response);
+    }
+
+    /**
+     * @return void
+     */
+    public function testRoutingExceptionForNoPathMatched(): void
+    {
+        $this->markTestSkipped('TODO');
+
+        /** @var ServerRequestInterface&ObjectProphecy */
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/hello'));
+        $request->getMethod()->willReturn('GET');
+        $request->getCookieParams()->willReturn([]);
+        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getQueryParams()->willReturn([]);
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+
+        $yaml = <<<YAML
+openapi: 3.0.1
+paths:
+  /pets:
+    get:
+      responses:
+        200:
+          description: Hey
+YAML;
+
+        $middleware = $this->createMiddleware($this->createYamlFileWithContent($yaml));
+
+        $response = $middleware->process($request->reveal(), $handler->reveal());
+
+        self::assertInstanceOf(ResponseInterface::class, $response);
+    }
+
+    /**
+     * @return void
+     */
+    public function testRoutingExceptionForNoMethodMatched(): void
+    {
+        $this->markTestSkipped('TODO');
+
+        /** @var ServerRequestInterface&ObjectProphecy */
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/hello'));
+        $request->getMethod()->willReturn('GET');
+        $request->getCookieParams()->willReturn([]);
+        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getQueryParams()->willReturn([]);
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+
+        $yaml = <<<YAML
+openapi: 3.0.1
+paths:
+  /pets:
+    get:
+      responses:
+        200:
+          description: Hey
+YAML;
+
+        $middleware = $this->createMiddleware($this->createYamlFileWithContent($yaml));
+
+        $response = $middleware->process($request->reveal(), $handler->reveal());
+
+        self::assertInstanceOf(ResponseInterface::class, $response);
+    }
+
+    /**
+     * @return void
+     */
+    public function testValidationExceptionForUnprocessableEntity(): void
+    {
+        $this->markTestSkipped('TODO');
+
+        /** @var ServerRequestInterface&ObjectProphecy */
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/pet'));
+        $request->getMethod()->willReturn('PUT');
+        $request->getCookieParams()->willReturn([]);
+        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getQueryParams()->willReturn([]);
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+
+        /** @var StreamInterface */
+        $body = $this->prophesize(StreamInterface::class);
+        $body->__toString()->willReturn('{}');
+        $this->request->getBody()->willReturn($body);
+
+        $yaml = <<<YAML
+openapi: 3.0.1
+paths:
+  /pet:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "\$ref": "#/components/schemas/Pet"
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "\$ref": "#/components/schemas/Pet"
+
+components:
+  schemas:
+    Pet:
+      required:
+        - id
+          type: object
+          properties:
+          id:
+            type: integer
+            format: int64
+YAML;
+
+        $middleware = $this->createMiddleware($this->createYamlFileWithContent($yaml));
+
+        $response = $middleware->process($request->reveal(), $handler->reveal());
+
+        self::assertInstanceOf(ResponseInterface::class, $response);
+    }
+
+    /**
+     * @param string $pathToYaml
+     * @return OpenApiMockMiddleware
+     */
+    private function createMiddleware(string $pathToYaml): OpenApiMockMiddleware
+    {
+        $psr17Factory = new Psr17Factory();
+        $settings = [
+            'minItems' => 5,
+            'maxItems' => 10,
+            'alwaysFakeOptionals' => true,
+            'strategy' => Options::STRATEGY_STATIC,
+        ];
+
+        return new OpenApiMockMiddleware(
+            RequestValidator::fromPath($pathToYaml, null),
+            ResponseValidator::fromPath($pathToYaml, null),
+            new ResponseFaker(
+                $psr17Factory,
+                $psr17Factory,
+                $settings
+            ),
+            new ErrorResponseGenerator(
+                $psr17Factory,
+                $psr17Factory,
+            )
+        );
+    }
+
+    /**
+     * @param string $content
+     * @return string
+     * @throws vfsStreamException
+     * @throws InvalidArgumentException
+     */
+    private function createYamlFileWithContent(string $content): string
+    {
+        $root = vfsStream::setup('root_dir');
+        $file = vfsStream::newFile('spec.yaml');
+        $file->setContent($content);
+        $root->addChild($file);
+
+        return $file->url();
+    }
+}
