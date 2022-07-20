@@ -6,12 +6,10 @@ namespace Cschindl\OpenAPIMock\Tests\Integration;
 
 use Cschindl\OpenAPIMock\ErrorResponseGenerator;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
-use Cschindl\OpenAPIMock\RequestValidator;
 use Cschindl\OpenAPIMock\ResponseFaker;
-use Cschindl\OpenAPIMock\ResponseValidator;
+use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Uri;
-use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -48,7 +46,7 @@ paths:
           description: Hey
 YAML;
 
-        $middleware = $this->createMiddleware($this->createYamlFileWithContent($yaml));
+        $middleware = $this->createMiddleware($yaml);
 
         $response = $middleware->process($request->reveal(), $handler->reveal());
 
@@ -180,11 +178,12 @@ YAML;
     }
 
     /**
-     * @param string $pathToYaml
+     * @param string $yaml
      * @return OpenApiMockMiddleware
      */
-    private function createMiddleware(string $pathToYaml): OpenApiMockMiddleware
+    private function createMiddleware(string $yaml): OpenApiMockMiddleware
     {
+        $validatorBuilder = (new ValidatorBuilder)->fromYaml($yaml);
         $psr17Factory = new Psr17Factory();
         $settings = [
             'minItems' => 5,
@@ -194,8 +193,7 @@ YAML;
         ];
 
         return new OpenApiMockMiddleware(
-            RequestValidator::fromPath($pathToYaml, null),
-            ResponseValidator::fromPath($pathToYaml, null),
+            $validatorBuilder,
             new ResponseFaker(
                 $psr17Factory,
                 $psr17Factory,
@@ -206,21 +204,5 @@ YAML;
                 $psr17Factory,
             )
         );
-    }
-
-    /**
-     * @param string $content
-     * @return string
-     * @throws vfsStreamException
-     * @throws InvalidArgumentException
-     */
-    private function createYamlFileWithContent(string $content): string
-    {
-        $root = vfsStream::setup('root_dir');
-        $file = vfsStream::newFile('spec.yaml');
-        $file->setContent($content);
-        $root->addChild($file);
-
-        return $file->url();
     }
 }

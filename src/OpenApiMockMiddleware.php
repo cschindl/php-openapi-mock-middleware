@@ -16,6 +16,7 @@ use League\OpenAPIValidation\PSR7\Exception\NoResponseCode;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidSecurity;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
+use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -25,14 +26,9 @@ use Throwable;
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
     /**
-     * @var RequestValidator 
+     * @var ValidatorBuilder 
      */
-    private $requestValidator;
-
-    /**
-     * @var ResponseValidator 
-     */
-    private $responseValidator;
+    private $validatorBuilder;
 
     /**
      * @var ResponseFaker 
@@ -45,19 +41,16 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     private $errorReponseHandler;
 
     /**
-     * @param RequestValidator $requestValidator
-     * @param ResponseValidator $responseValidator
+     * @param ValidatorBuilder $validatorBuilder
      * @param ResponseFaker $responseFaker
      * @param ErrorResponseGenerator $errorReponseHandler
      */
     public function __construct(
-        RequestValidator $requestValidator,
-        ResponseValidator $responseValidator,
+        ValidatorBuilder $validatorBuilder,
         ResponseFaker $responseFaker,
         ErrorResponseGenerator $errorReponseHandler
     ) {
-        $this->requestValidator = $requestValidator;
-        $this->responseValidator = $responseValidator;
+        $this->validatorBuilder = $validatorBuilder;
         $this->responseFaker = $responseFaker;
         $this->errorReponseHandler = $errorReponseHandler;
     }
@@ -80,19 +73,26 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         // or it's asking for a specific example that does not exist in the current document
 
         try {
-            $operationAddress = $this->requestValidator->validateRequest($request);
-            $schema = $this->requestValidator->getSchema();
+            $requestValidator = $this->validatorBuilder->getServerRequestValidator();
+            $operationAddress = $requestValidator->validate($request);
+            $schema = $requestValidator->getSchema();
+
+            if (!isset($schema->paths) || empty($schema->paths)) {
+                throw RoutingException::forNoResourceProvided(NoPath::fromPath($request->getUri()->getPath()));
+            }
 
             $response = $this->handleValidRequest($schema, $operationAddress, $contentType);
 
             try {
-                $this->responseValidator->validateResonse($operationAddress, $response);
+                $responseValidator = $this->validatorBuilder->getResponseValidator();
+                $responseValidator->validate($operationAddress, $response);
             } catch (Throwable $th) {
                 $response = $this->handleInvalidResponse($th, $contentType);
             }
         } catch (Throwable $th) {
+            $requestValidator = $this->validatorBuilder->getServerRequestValidator();
             $operationAddress = new OperationAddress($request->getUri()->getPath(), $request->getMethod());
-            $schema = $this->requestValidator->getSchema();
+            $schema = $requestValidator->getSchema();
 
             $response = $this->handleInvalidRequest($th, $schema, $operationAddress, $contentType);
         }
