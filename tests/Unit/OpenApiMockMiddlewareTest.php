@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Cschindl\OpenAPIMock\Tests\Unit;
 
 use cebe\openapi\spec\OpenApi;
-use cebe\openapi\spec\PathItem;
 use Cschindl\OpenAPIMock\ErrorResponseGenerator;
 use Cschindl\OpenAPIMock\Exception\ValidationException;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
@@ -34,19 +33,19 @@ class OpenApiMockMiddlewareTest extends TestCase
     public function testHandleValidRequest(): void
     {
         $request = $this->prophesize(ServerRequestInterface::class);
-        $request->getUri()->willReturn(new Uri('http://localhost:4010/pet'));
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/test'));
         $request->getMethod()->willReturn('GET');
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([
             'openapi' => '3.0.2',
             'paths' => [
-                '/test' => new PathItem([
+                '/test' => [
                     'description' => 'something'
-                ]),
+                ],
             ],
         ]);
-        $operationAddress = new OperationAddress('/', 'GET');
+        $operationAddress = new OperationAddress('/test', 'GET');
 
         $requestValidator = $this->prophesize(ServerRequestValidator::class);
         $requestValidator->validate($request)->willReturn($operationAddress);
@@ -108,6 +107,48 @@ class OpenApiMockMiddlewareTest extends TestCase
         );
 
         $errorResponseGenerator = $this->prophesize(ErrorResponseGenerator::class);
+
+        $middleware = new OpenApiMockMiddleware(
+            $validatorBuilder->reveal(),
+            $responseFaker->reveal(),
+            $errorResponseGenerator->reveal()
+        );
+
+        $response = $middleware->process($request->reveal(), $handler->reveal());
+
+        self::assertInstanceOf(ResponseInterface::class, $response);
+    }
+
+    /**
+     * @return void
+     */
+    public function testMissingPathInSchema(): void
+    {
+        $request = $this->prophesize(ServerRequestInterface::class);
+        $request->getUri()->willReturn(new Uri('http://localhost:4010/test'));
+        $request->getMethod()->willReturn('GET');
+        $handler = $this->prophesize(RequestHandlerInterface::class);
+
+        $schema = new OpenApi([
+            'openapi' => '3.0.2',
+        ]);
+        $operationAddress = new OperationAddress('/test', 'GET');
+
+        $requestValidator = $this->prophesize(ServerRequestValidator::class);
+        $requestValidator->validate($request)->willReturn($operationAddress);
+        $requestValidator->getSchema()->willReturn($schema);
+
+        $responseValidator = $this->prophesize(ResponseValidator::class);
+
+        $validatorBuilder = $this->prophesize(ValidatorBuilder::class);
+        $validatorBuilder->getServerRequestValidator()->willReturn($requestValidator);
+        $validatorBuilder->getResponseValidator()->willReturn($responseValidator);
+
+        $responseFaker = $this->prophesize(ResponseFaker::class);
+        $errorResponseGenerator = $this->prophesize(ErrorResponseGenerator::class);
+        $errorResponseGenerator->handleException(Argument::type(ValidationException::class), 'application/json')->willReturn(
+            $this->prophesize(ResponseInterface::class)->reveal()
+        );
 
         $middleware = new OpenApiMockMiddleware(
             $validatorBuilder->reveal(),
