@@ -25,26 +25,12 @@ use Throwable;
 
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
-    /**
-     * @var ValidatorBuilder 
-     */
-    private $validatorBuilder;
+    private ValidatorBuilder $validatorBuilder;
 
-    /**
-     * @var ResponseFaker 
-     */
-    private $responseFaker;
+    private ResponseFaker $responseFaker;
 
-    /**
-     * @var ErrorResponseGenerator 
-     */
-    private $errorReponseHandler;
+    private ErrorResponseGenerator $errorReponseHandler;
 
-    /**
-     * @param ValidatorBuilder $validatorBuilder
-     * @param ResponseFaker $responseFaker
-     * @param ErrorResponseGenerator $errorReponseHandler
-     */
     public function __construct(
         ValidatorBuilder $validatorBuilder,
         ResponseFaker $responseFaker,
@@ -55,14 +41,9 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         $this->errorReponseHandler = $errorReponseHandler;
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     * @param RequestHandlerInterface $handler
-     * @return ResponseInterface
-     */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $statusCode = "200";
+        $statusCode = '200';
         $contentType = 'application/json';
 
         // TODO
@@ -101,10 +82,6 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @param OpenApi $schema
-     * @param OperationAddress $operationAddress
-     * @param string $contentType
-     * @return ResponseInterface
      * @throws InvalidArgumentException
      */
     private function handleValidRequest(OpenApi $schema, OperationAddress $operationAddress, string $contentType): ResponseInterface
@@ -117,11 +94,6 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @param Throwable $th
-     * @param OpenApi $schema
-     * @param OperationAddress $operationAddress
-     * @param string $contentType
-     * @return ResponseInterface
      * @throws InvalidArgumentException
      * @throws Throwable
      */
@@ -135,21 +107,19 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         switch (true) {
             case $th instanceof NoPath:
                 return $this->handleNoOperationRequest($th, $schema, $operationAddress, $contentType);
+
             case $th instanceof InvalidSecurity:
                 return $this->handleInvalidSecurityRequest($th, $schema, $operationAddress, $contentType);
+
             case $th instanceof ValidationFailed:
                 return $this->handleValidationFailedRequest($th, $schema, $operationAddress, $contentType);
+
             default:
                 return $this->errorReponseHandler->handleException(ValidationException::forViolations($th), $contentType);
         }
     }
 
     /**
-     * @param Throwable $previous
-     * @param OpenApi $schema
-     * @param OperationAddress $operationAddress
-     * @param string $contentType
-     * @return ResponseInterface
      * @throws InvalidArgumentException
      */
     private function handleNoOperationRequest(Throwable $previous, OpenApi $schema, OperationAddress $operationAddress, string $contentType): ResponseInterface
@@ -176,11 +146,6 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @param Throwable $previous
-     * @param OpenApi $schema
-     * @param OperationAddress $operationAddress
-     * @param string $contentType
-     * @return ResponseInterface
      * @throws InvalidArgumentException
      */
     private function handleInvalidSecurityRequest(Throwable $previous, OpenApi $schema, OperationAddress $operationAddress, string $contentType): ResponseInterface
@@ -193,11 +158,6 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @param Throwable $previous
-     * @param OpenApi $schema
-     * @param OperationAddress $operationAddress
-     * @param string $contentType
-     * @return ResponseInterface
      * @throws InvalidArgumentException
      */
     private function handleValidationFailedRequest(Throwable $previous, OpenApi $schema, OperationAddress $operationAddress, string $contentType): ResponseInterface
@@ -210,9 +170,6 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     }
 
     /**
-     * @param Throwable $previous
-     * @param string $contentType
-     * @return ResponseInterface
      * @throws InvalidArgumentException
      */
     private function handleInvalidResponse(Throwable $previous, string $contentType): ResponseInterface

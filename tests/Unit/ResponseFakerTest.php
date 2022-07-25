@@ -24,24 +24,14 @@ class ResponseFakerTest extends TestCase
 {
     use ProphecyTrait;
 
-    /**
-     * @var OpenApi
-     */
-    private $schema;
+    private OpenApi $schema;
 
-    /**
-     * @var ResponseFactoryInterface&ObjectProphecy
-     */
+    /** @var ResponseFactoryInterface|ObjectProphecy */
     private $responseFactory;
 
-    /**
-     * @var ResponseFactoryInterface%ObjectProphecy
-     */
+    /** @var StreamFactoryInterface|ObjectProphecy */
     private $streamFactory;
 
-    /**
-     * @return void
-     */
     public function setUp(): void
     {
         $yaml = <<<YAML
@@ -69,14 +59,11 @@ YAML;
         $response->withStatus(200)->willReturn($response);
 
         $this->responseFactory = $this->prophesize(ResponseFactoryInterface::class);
-        $this->responseFactory->createResponse()->willReturn($response->reveal());
+        $this->responseFactory->createResponse()->willReturn($response);
         $this->streamFactory = $this->prophesize(StreamFactoryInterface::class);
-        $this->streamFactory->createStream(Argument::any())->willReturn($stream->reveal());
+        $this->streamFactory->createStream(Argument::any())->willReturn($stream);
     }
 
-    /**
-     * @return void
-     */
     public function testMockPossibleResponseWithExistingStatusCode(): void
     {
         $operationAddress = new OperationAddress('/pet', 'GET');
@@ -92,9 +79,6 @@ YAML;
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
     public function testMockPossibleResponseWithMultipleStatusCodes(): void
     {
         $operationAddress = new OperationAddress('/pet', 'GET');
@@ -110,9 +94,6 @@ YAML;
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
     public function testMockPossibleResponseWithNoResponse(): void
     {
         $operationAddress = new OperationAddress('/pet', 'GET');
@@ -128,9 +109,6 @@ YAML;
         $responseFaker->mockPossibleResponse($this->schema, $operationAddress, '400', 'application/json');
     }
 
-    /**
-     * @return void
-     */
     public function testMockPossibleResponseWithNoPath(): void
     {
         $operationAddress = new OperationAddress('/', 'GET');

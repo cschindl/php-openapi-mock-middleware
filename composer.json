@@ -26,10 +26,14 @@
         "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
+        "doctrine/coding-standard": "^9.0",
+        "infection/infection": "^0.26.6",
+        "jangregor/phpstan-prophecy": "^1.0",
         "mikey179/vfsstream": "^1.6",
         "nyholm/psr7": "^1.5",
         "phpspec/prophecy": "^1.15",
         "phpspec/prophecy-phpunit": "^2.0",
+        "phpstan/extension-installer": "^1.1",
         "phpstan/phpstan": "^1.7",
         "phpstan/phpstan-phpunit": "^1",
         "phpunit/phpunit": "^9.5",
@@ -47,6 +51,12 @@
         }
     },
     "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "ergebnis/composer-normalize": true,
+            "phpstan/extension-installer": true,
+            "infection/extension-installer": true
+        },
         "sort-packages": true
     },
     "scripts": {

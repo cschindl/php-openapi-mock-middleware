@@ -27,9 +27,6 @@ class OpenApiMockMiddlewareTest extends TestCase
 {
     use ProphecyTrait;
 
-    /**
-     * @return void
-     */
     public function testHandleValidRequest(): void
     {
         $request = $this->prophesize(ServerRequestInterface::class);
@@ -40,9 +37,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $schema = new OpenApi([
             'openapi' => '3.0.2',
             'paths' => [
-                '/test' => [
-                    'description' => 'something'
-                ],
+                '/test' => ['description' => 'something'],
             ],
         ]);
         $operationAddress = new OperationAddress('/test', 'GET');
@@ -75,9 +70,6 @@ class OpenApiMockMiddlewareTest extends TestCase
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
     public function testHandleInValidRequest(): void
     {
         $request = $this->prophesize(ServerRequestInterface::class);
@@ -119,9 +111,6 @@ class OpenApiMockMiddlewareTest extends TestCase
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
     public function testMissingPathInSchema(): void
     {
         $request = $this->prophesize(ServerRequestInterface::class);
@@ -129,9 +118,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getMethod()->willReturn('GET');
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
-        $schema = new OpenApi([
-            'openapi' => '3.0.2',
-        ]);
+        $schema = new OpenApi(['openapi' => '3.0.2']);
         $operationAddress = new OperationAddress('/test', 'GET');
 
         $requestValidator = $this->prophesize(ServerRequestValidator::class);
@@ -161,9 +148,6 @@ class OpenApiMockMiddlewareTest extends TestCase
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
     public function testHandleInValidResponse(): void
     {
         $request = $this->prophesize(ServerRequestInterface::class);

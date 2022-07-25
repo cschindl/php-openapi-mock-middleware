@@ -11,7 +11,6 @@ class UnknownException extends RequestException
     public const UNEXPECTED_ERROR_OCCURRED = 'UNEXPECTED_ERROR_OCCURRED';
 
     /**
-     * @param Throwable $throwable
      * @return UnknownException
      */
     public static function forUnexpectedErrorOccurred(?Throwable $previous = null): self

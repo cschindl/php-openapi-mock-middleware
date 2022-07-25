@@ -14,7 +14,6 @@ class RoutingException extends RequestException
     public const NO_PATH_AND_METHOD_AND_RESPONSE_CODE_MATCHED_ERROR = 'NO_PATH_AND_METHOD_AND_RESPONSE_CODE_MATCHED_ERROR';
 
     /**
-     * @param Throwable|null $previous
      * @return RoutingException
      */
     public static function forNoResourceProvided(?Throwable $previous = null): self
@@ -26,7 +25,6 @@ class RoutingException extends RequestException
     }
 
     /**
-     * @param Throwable|null $previous
      * @return RoutingException
      */
     public static function forNoPathMatched(?Throwable $previous = null): self
@@ -38,7 +36,6 @@ class RoutingException extends RequestException
     }
 
     /**
-     * @param Throwable|null $previous
      * @return RoutingException
      */
     public static function forNoPathAndMethodMatched(?Throwable $previous = null): self
@@ -50,7 +47,6 @@ class RoutingException extends RequestException
     }
 
     /**
-     * @param Throwable|null $previous
      * @return RoutingException
      */
     public static function forNoPathAndMethodAndResponseCodeMatched(?Throwable $previous = null): self

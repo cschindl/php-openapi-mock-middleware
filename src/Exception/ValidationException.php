@@ -6,6 +6,8 @@ namespace Cschindl\OpenAPIMock\Exception;
 
 use Throwable;
 
+use function implode;
+
 class ValidationException extends RequestException
 {
     public const UNPROCESSABLE_ENTITY = 'UNPROCESSABLE_ENTITY';
@@ -14,7 +16,6 @@ class ValidationException extends RequestException
     public const VIOLATIONS = 'VIOLATIONS';
 
     /**
-     * @param Throwable|null $previous
      * @return ValidationException
      */
     public static function forUnprocessableEntity(?Throwable $previous = null): self
@@ -22,17 +23,19 @@ class ValidationException extends RequestException
         $title = 'Invalid request';
 
         $detail = [];
-        $detail[] = $previous->getMessage();
 
-        if ($previous->getPrevious() !== null) {
-            $detail[] = $previous->getPrevious()->getMessage();
+        if ($previous !== null) {
+            $detail[] = $previous->getMessage();
+
+            if ($previous->getPrevious() !== null) {
+                $detail[] = $previous->getPrevious()->getMessage();
+            }
         }
 
         return new self(self::UNPROCESSABLE_ENTITY, $title, implode('\n', $detail), 422, $previous);
     }
 
     /**
-     * @param Throwable|null $previous
      * @return ValidationException
      */
     public static function forNotAcceptable(?Throwable $previous = null): self
@@ -44,7 +47,6 @@ class ValidationException extends RequestException
     }
 
     /**
-     * @param Throwable|null $previous
      * @return ValidationException
      */
     public static function forNotFound(?Throwable $previous = null): self
@@ -56,7 +58,6 @@ class ValidationException extends RequestException
     }
 
     /**
-     * @param Throwable|null $previous
      * @return ValidationException
      */
     public static function forViolations(?Throwable $previous = null): self

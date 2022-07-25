@@ -14,32 +14,23 @@ use Vural\OpenAPIFaker\Exception\NoPath;
 use Vural\OpenAPIFaker\Exception\NoResponse;
 use Vural\OpenAPIFaker\OpenAPIFaker;
 
+use function array_shift;
+use function is_string;
+use function json_encode;
+
 class ResponseFaker
 {
-    /**
-     * @var ResponseFactoryInterface
-     */
-    private $responseFactory;
+    private ResponseFactoryInterface $responseFactory;
+
+    private StreamFactoryInterface $streamFactory;
+
+    /** @var array{minItems?: int|null, maxItems?: int|null, alwaysFakeOptionals?: bool, strategy?: string} */
+    private array $fakerOptions;
+
+    private ?OpenAPIFaker $faker = null;
 
     /**
-     * @var StreamFactoryInterface
-     */
-    private $streamFactory;
-
-    /**
-     * @var array
-     */
-    private $fakerOptions;
-
-    /**
-     * @var OpenAPIFaker
-     */
-    private $faker;
-
-    /**
-     * @param ResponseFactoryInterface $responseFactory
-     * @param StreamFactoryInterface $streamFactory
-     * @param array $fakerOptions
+     * @param array{minItems?: int|null, maxItems?: int|null, alwaysFakeOptionals?: bool, strategy?: string} $fakerOptions
      */
     public function __construct(
         ResponseFactoryInterface $responseFactory,
@@ -52,11 +43,8 @@ class ResponseFaker
     }
 
     /**
-     * @param OpenApi $schema
-     * @param OperationAddress $operationAddress
-     * @param array|string $statusCodes
-     * @param string $contentType
-     * @return ResponseInterface
+     * @param array<int, string>|string $statusCodes
+     *
      * @throws NoResponse
      * @throws NoPath
      * @throws InvalidArgumentException
@@ -71,6 +59,7 @@ class ResponseFaker
             $statusCodes = [$statusCodes];
         }
 
+        /** @var string $statusCode */
         $statusCode = array_shift($statusCodes);
 
         try {
@@ -85,11 +74,6 @@ class ResponseFaker
     }
 
     /**
-     * @param OpenApi $schema
-     * @param OperationAddress $operationAddress
-     * @param string $statusCode
-     * @param string $contentType
-     * @return ResponseInterface
      * @throws NoPath
      * @throws NoResponse
      * @throws InvalidArgumentException
@@ -108,23 +92,18 @@ class ResponseFaker
         $fakeData = $faker->mockResponse($path, $method, $statusCode, $contentType);
 
         $response = $this->responseFactory->createResponse();
-        $body = $this->streamFactory->createStream(json_encode($fakeData));
+        $body = $this->streamFactory->createStream((string) json_encode($fakeData));
 
-        return $response->withBody($body)->withAddedHeader('Content-Type', $contentType)->withStatus($statusCode);
+        return $response->withBody($body)->withAddedHeader('Content-Type', $contentType)->withStatus((int) $statusCode);
     }
 
-    /**
-     * @param OpenApi $schema
-     * @return OpenAPIFaker
-     */
     private function createFaker(OpenApi $schema): OpenAPIFaker
     {
         if ($this->faker instanceof OpenAPIFaker) {
             return $this->faker;
         }
 
-        $this->faker = OpenAPIFaker::createFromSchema($schema);
-        $this->faker->setOptions($this->fakerOptions);
+        $this->faker = OpenAPIFaker::createFromSchema($schema)->setOptions($this->fakerOptions);
 
         return $this->faker;
     }

@@ -13,7 +13,6 @@ class NegotiationException extends RequestException
     public const INVALID_CONTENT_TYPE = 'INVALID_CONTENT_TYPE';
 
     /**
-     * @param Throwable|null $previous
      * @return NegotiationException
      */
     public static function forNoComplexObjectText(?Throwable $previous = null): self
@@ -25,7 +24,6 @@ class NegotiationException extends RequestException
     }
 
     /**
-     * @param Throwable|null $previous
      * @return NegotiationException
      */
     public static function forNoResponseDefined(?Throwable $previous = null): self
@@ -37,7 +35,6 @@ class NegotiationException extends RequestException
     }
 
     /**
-     * @param Throwable|null $previous
      * @return NegotiationException
      */
     public static function forInvalidContentType(?Throwable $previous = null): self

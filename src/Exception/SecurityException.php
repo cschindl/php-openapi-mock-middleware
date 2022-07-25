@@ -11,7 +11,6 @@ class SecurityException extends RequestException
     public const UNAUTHORIZED = 'UNAUTHORIZED';
 
     /**
-     * @param Throwable|null $previous
      * @return SecurityException
      */
     public static function forUnauthorized(?Throwable $previous = null): self

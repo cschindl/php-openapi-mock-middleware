@@ -12,7 +12,6 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
-use Prophecy\Prophecy\ObjectProphecy;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -22,12 +21,8 @@ class OpenApiMockMiddlewareTest extends TestCase
 {
     use ProphecyTrait;
 
-    /**
-     * @return void
-     */
     public function testHandleValidRequest(): void
     {
-        /** @var ServerRequestInterface&ObjectProphecy */
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/pets'));
         $request->getMethod()->willReturn('GET');
@@ -53,14 +48,11 @@ YAML;
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
+
     public function testRoutingExceptionForNoPathMatched(): void
     {
         $this->markTestSkipped('TODO');
 
-        /** @var ServerRequestInterface&ObjectProphecy */
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/hello'));
         $request->getMethod()->willReturn('GET');
@@ -86,14 +78,10 @@ YAML;
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
     public function testRoutingExceptionForNoMethodMatched(): void
     {
         $this->markTestSkipped('TODO');
 
-        /** @var ServerRequestInterface&ObjectProphecy */
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/hello'));
         $request->getMethod()->willReturn('GET');
@@ -119,14 +107,10 @@ YAML;
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @return void
-     */
     public function testValidationExceptionForUnprocessableEntity(): void
     {
         $this->markTestSkipped('TODO');
 
-        /** @var ServerRequestInterface&ObjectProphecy */
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/pet'));
         $request->getMethod()->willReturn('PUT');
@@ -135,7 +119,6 @@ YAML;
         $request->getQueryParams()->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
-        /** @var StreamInterface */
         $body = $this->prophesize(StreamInterface::class);
         $body->__toString()->willReturn('{}');
         $this->request->getBody()->willReturn($body);
@@ -177,13 +160,9 @@ YAML;
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
 
-    /**
-     * @param string $yaml
-     * @return OpenApiMockMiddleware
-     */
     private function createMiddleware(string $yaml): OpenApiMockMiddleware
     {
-        $validatorBuilder = (new ValidatorBuilder)->fromYaml($yaml);
+        $validatorBuilder = (new ValidatorBuilder())->fromYaml($yaml);
         $psr17Factory = new Psr17Factory();
         $settings = [
             'minItems' => 5,

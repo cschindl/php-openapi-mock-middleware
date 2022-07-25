@@ -9,23 +9,10 @@ use Throwable;
 
 class RequestException extends InvalidArgumentException implements RFC7807Interface
 {
-    /**
-     * @var string
-     */
-    private $type;
+    private string $type;
 
-    /**
-     * @var string
-     */
-    private $title;
+    private string $title;
 
-    /**
-     * @param string $type
-     * @param string $title
-     * @param string|null $detail
-     * @param int $code
-     * @param Throwable|null $previous
-     */
     public function __construct(string $type, string $title, ?string $detail = null, int $code = 0, ?Throwable $previous = null)
     {
         parent::__construct($detail ?? $title, $code, $previous);
@@ -34,17 +21,11 @@ class RequestException extends InvalidArgumentException implements RFC7807Interf
         $this->title = $title;
     }
 
-    /**
-     * @return string
-     */
     public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * @return string
-     */
     public function getTitle(): string
     {
         return $this->title;
