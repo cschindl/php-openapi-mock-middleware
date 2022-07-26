@@ -43,7 +43,7 @@ class RoutingException extends RequestException
         $title = 'Route resolved, but no path matched';
         $detail = $previous !== null ? $previous->getMessage() : '';
 
-        return new self(self::NO_PATH_AND_METHOD_MATCHED_ERROR, $title, $detail, 405);
+        return new self(self::NO_PATH_AND_METHOD_MATCHED_ERROR, $title, $detail, 404);
     }
 
     /**
