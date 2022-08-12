@@ -22,9 +22,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
+use Vural\OpenAPIFaker\Exception\NoExample;
 
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
+    private const HEADER_CONTENT_TYPE = 'Content-Type';
+    private const HEADER_FAKER_STATUSCODE = 'X-Faker-Statuscode';
+    private const HEADER_FAKER_EXAMPLE = 'X-Faker-Example';
+    private const DEFAULT_CONTENT_TYPE = 'application/json';
+
     private ValidatorBuilder $validatorBuilder;
 
     private ResponseFaker $responseFaker;
@@ -43,15 +49,9 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        $statusCode = '200';
-        $contentType = 'application/json';
-
-        // TODO
-        // ValidationException::forNotFound
-        // Message: The server cannot find the requested content
-        // Returned Status Code: 404
-        // Explanation: This error occurs when the current request is asking for a specific status code that the document is not listing
-        // or it's asking for a specific example that does not exist in the current document
+        $statusCode = $this->getStatusCode($request);
+        $contentType = $this->getContentType($request);
+        $exampleName = $this->getExample($request);
 
         try {
             $requestValidator = $this->validatorBuilder->getServerRequestValidator();
@@ -62,7 +62,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
                 throw RoutingException::forNoResourceProvided(NoPath::fromPath($request->getUri()->getPath()));
             }
 
-            $response = $this->handleValidRequest($schema, $operationAddress, $contentType);
+            $response = $this->handleValidRequest($schema, $operationAddress, $contentType, $statusCode, $exampleName);
 
             try {
                 $responseValidator = $this->validatorBuilder->getResponseValidator();
@@ -81,13 +81,41 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         return $response;
     }
 
+    private function getStatusCode(ServerRequestInterface $request): ?string
+    {
+        $statusCode = $request->getHeader(self::HEADER_FAKER_STATUSCODE)[0] ?? null;
+
+        return !empty($statusCode) ? $statusCode : null;
+    }
+
+    private function getContentType(ServerRequestInterface $request): string
+    {
+        $statusCode = $request->getHeader(self::HEADER_CONTENT_TYPE)[0] ?? self::DEFAULT_CONTENT_TYPE;
+
+        return !empty($statusCode) ? $statusCode : self::DEFAULT_CONTENT_TYPE;
+    }
+
+    private function getExample(ServerRequestInterface $request): ?string
+    {
+        $statusCode = $request->getHeader(self::HEADER_FAKER_EXAMPLE)[0] ?? null;
+
+        return !empty($statusCode) ? $statusCode : null;
+    }
+
     /**
      * @throws InvalidArgumentException
      */
-    private function handleValidRequest(OpenApi $schema, OperationAddress $operationAddress, string $contentType): ResponseInterface
-    {
+    private function handleValidRequest(
+        OpenApi $schema,
+        OperationAddress $operationAddress,
+        string $contentType,
+        ?string $statusCode = null,
+        ?string $exampleName = null
+    ): ResponseInterface {
         try {
-            return $this->responseFaker->mockPossibleResponse($schema, $operationAddress, ['200', '201'], $contentType);
+            return $this->responseFaker->mockPossibleResponse($schema, $operationAddress, $statusCode ?? ['200', '201'], $contentType, $exampleName);
+        } catch (NoExample $th) {
+            return $this->errorReponseHandler->handleException(ValidationException::forNotFound($th), $contentType);
         } catch (Throwable $th) {
             return $this->errorReponseHandler->handleException(UnknownException::forUnexpectedErrorOccurred($th), $contentType);
         }

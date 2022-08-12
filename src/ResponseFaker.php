@@ -10,6 +10,7 @@ use League\OpenAPIValidation\PSR7\OperationAddress;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Vural\OpenAPIFaker\Exception\NoExample;
 use Vural\OpenAPIFaker\Exception\NoPath;
 use Vural\OpenAPIFaker\Exception\NoResponse;
 use Vural\OpenAPIFaker\OpenAPIFaker;
@@ -45,15 +46,17 @@ class ResponseFaker
     /**
      * @param array<int, string>|string $statusCodes
      *
-     * @throws NoResponse
      * @throws NoPath
+     * @throws NoResponse
+     * @throws NoExample
      * @throws InvalidArgumentException
      */
     public function mockPossibleResponse(
         OpenApi $schema,
         OperationAddress $operationAddress,
         $statusCodes,
-        string $contentType = 'application/json'
+        string $contentType = 'application/json',
+        ?string $exampleName = null
     ): ResponseInterface {
         if (is_string($statusCodes)) {
             $statusCodes = [$statusCodes];
@@ -63,33 +66,37 @@ class ResponseFaker
         $statusCode = array_shift($statusCodes);
 
         try {
-            return $this->mockResponse($schema, $operationAddress, $statusCode, $contentType);
-        } catch (NoResponse | NoPath $th) {
+            return $this->mockResponse($schema, $operationAddress, $statusCode, $contentType, $exampleName);
+        } catch (NoResponse | NoPath | NoExample $th) {
             if (empty($statusCodes)) {
                 throw $th;
             }
 
-            return $this->mockPossibleResponse($schema, $operationAddress, $statusCodes, $contentType);
+            return $this->mockPossibleResponse($schema, $operationAddress, $statusCodes, $contentType, $exampleName);
         }
     }
 
     /**
      * @throws NoPath
      * @throws NoResponse
+     * @throws NoExample
      * @throws InvalidArgumentException
      */
     private function mockResponse(
         OpenApi $schema,
         OperationAddress $operationAddress,
         string $statusCode = '200',
-        string $contentType = 'application/json'
+        string $contentType = 'application/json',
+        ?string $exampleName = null
     ): ResponseInterface {
         $faker = $this->createFaker($schema);
 
         $path = $operationAddress->path();
         $method = $operationAddress->method();
 
-        $fakeData = $faker->mockResponse($path, $method, $statusCode, $contentType);
+        $fakeData = $exampleName !== null
+            ? $faker->mockResponseForExample($path, $method, $exampleName, $statusCode, $contentType)
+            : $faker->mockResponse($path, $method, $statusCode, $contentType);
 
         $response = $this->responseFactory->createResponse();
         $body = $this->streamFactory->createStream((string) json_encode($fakeData));
