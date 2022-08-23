@@ -32,6 +32,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/test'));
         $request->getMethod()->willReturn('GET');
+        $request->getHeader(Argument::any())->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([
@@ -53,7 +54,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $validatorBuilder->getResponseValidator()->willReturn($responseValidator);
 
         $responseFaker = $this->prophesize(ResponseFaker::class);
-        $responseFaker->mockPossibleResponse($schema, $operationAddress, ['200', '201'], 'application/json')->willReturn(
+        $responseFaker->mockPossibleResponse($schema, $operationAddress, ['200', '201'], 'application/json', null)->willReturn(
             $this->prophesize(ResponseInterface::class)->reveal()
         );
 
@@ -75,6 +76,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/pet'));
         $request->getMethod()->willReturn('GET');
+        $request->getHeader(Argument::any())->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([
@@ -116,6 +118,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/test'));
         $request->getMethod()->willReturn('GET');
+        $request->getHeader(Argument::any())->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi(['openapi' => '3.0.2']);
@@ -153,6 +156,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request = $this->prophesize(ServerRequestInterface::class);
         $request->getUri()->willReturn(new Uri('http://localhost:4010/pet'));
         $request->getMethod()->willReturn('GET');
+        $request->getHeader(Argument::any())->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([
@@ -176,7 +180,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $validatorBuilder->getResponseValidator()->willReturn($responseValidator);
 
         $responseFaker = $this->prophesize(ResponseFaker::class);
-        $responseFaker->mockPossibleResponse($schema, $operationAddress, ['200', '201'], 'application/json')->willReturn(
+        $responseFaker->mockPossibleResponse($schema, $operationAddress, ['200', '201'], 'application/json', null)->willReturn(
             $this->prophesize(ResponseInterface::class)->reveal()
         );
 

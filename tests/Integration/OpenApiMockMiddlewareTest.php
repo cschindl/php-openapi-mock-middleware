@@ -12,6 +12,7 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Stream;
 use Nyholm\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -31,6 +32,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getMethod()->willReturn('GET');
         $request->getCookieParams()->willReturn([]);
         $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
@@ -63,6 +65,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getMethod()->willReturn('GET');
         $request->getCookieParams()->willReturn([]);
         $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
@@ -89,6 +92,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getMethod()->willReturn('PUT');
         $request->getCookieParams()->willReturn([]);
         $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
@@ -115,6 +119,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getMethod()->willReturn('POST');
         $request->getCookieParams()->willReturn([]);
         $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $request->getBody()->willReturn(Stream::create('{}'));
         $handler = $this->prophesize(RequestHandlerInterface::class);
@@ -142,6 +147,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getMethod()->willReturn('DELETE');
         $request->getCookieParams()->willReturn([]);
         $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $request->getBody()->willReturn(Stream::create('{}'));
         $handler = $this->prophesize(RequestHandlerInterface::class);

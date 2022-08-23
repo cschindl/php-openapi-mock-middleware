@@ -26,25 +26,25 @@ use Vural\OpenAPIFaker\Exception\NoExample;
 
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
-    private const HEADER_CONTENT_TYPE = 'Content-Type';
-    private const HEADER_FAKER_STATUSCODE = 'X-Faker-Statuscode';
-    private const HEADER_FAKER_EXAMPLE = 'X-Faker-Example';
-    private const DEFAULT_CONTENT_TYPE = 'application/json';
+    public const HEADER_CONTENT_TYPE = 'Content-Type';
+    public const HEADER_FAKER_STATUSCODE = 'X-Faker-Statuscode';
+    public const HEADER_FAKER_EXAMPLE = 'X-Faker-Example';
+    public const DEFAULT_CONTENT_TYPE = 'application/json';
 
     private ValidatorBuilder $validatorBuilder;
 
     private ResponseFaker $responseFaker;
 
-    private ErrorResponseGenerator $errorReponseHandler;
+    private ErrorResponseGenerator $errorReponseGenerator;
 
     public function __construct(
         ValidatorBuilder $validatorBuilder,
         ResponseFaker $responseFaker,
-        ErrorResponseGenerator $errorReponseHandler
+        ErrorResponseGenerator $errorReponseGenerator
     ) {
         $this->validatorBuilder = $validatorBuilder;
         $this->responseFaker = $responseFaker;
-        $this->errorReponseHandler = $errorReponseHandler;
+        $this->errorReponseGenerator = $errorReponseGenerator;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -90,16 +90,16 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
     private function getContentType(ServerRequestInterface $request): string
     {
-        $statusCode = $request->getHeader(self::HEADER_CONTENT_TYPE)[0] ?? self::DEFAULT_CONTENT_TYPE;
+        $contentType = $request->getHeader(self::HEADER_CONTENT_TYPE)[0] ?? self::DEFAULT_CONTENT_TYPE;
 
-        return !empty($statusCode) ? $statusCode : self::DEFAULT_CONTENT_TYPE;
+        return !empty($contentType) ? $contentType : self::DEFAULT_CONTENT_TYPE;
     }
 
     private function getExample(ServerRequestInterface $request): ?string
     {
-        $statusCode = $request->getHeader(self::HEADER_FAKER_EXAMPLE)[0] ?? null;
+        $example = $request->getHeader(self::HEADER_FAKER_EXAMPLE)[0] ?? null;
 
-        return !empty($statusCode) ? $statusCode : null;
+        return !empty($example) ? $example : null;
     }
 
     /**
@@ -115,9 +115,9 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         try {
             return $this->responseFaker->mockPossibleResponse($schema, $operationAddress, $statusCode ?? ['200', '201'], $contentType, $exampleName);
         } catch (NoExample $th) {
-            return $this->errorReponseHandler->handleException(ValidationException::forNotFound($th), $contentType);
+            return $this->errorReponseGenerator->handleException(ValidationException::forNotFound($th), $contentType);
         } catch (Throwable $th) {
-            return $this->errorReponseHandler->handleException(UnknownException::forUnexpectedErrorOccurred($th), $contentType);
+            return $this->errorReponseGenerator->handleException(UnknownException::forUnexpectedErrorOccurred($th), $contentType);
         }
     }
 
@@ -134,7 +134,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
         switch (true) {
             case $th instanceof NoPath:
-                return $this->handleNoOperationRequest($th, $schema, $operationAddress, $contentType);
+                return $this->handleNoPathMatchedRequest($th, $schema, $operationAddress, $contentType);
 
             case $th instanceof InvalidSecurity:
                 return $this->handleInvalidSecurityRequest($th, $schema, $operationAddress, $contentType);
@@ -143,14 +143,14 @@ class OpenApiMockMiddleware implements MiddlewareInterface
                 return $this->handleValidationFailedRequest($th, $schema, $operationAddress, $contentType);
 
             default:
-                return $this->errorReponseHandler->handleException(ValidationException::forViolations($th), $contentType);
+                return $this->errorReponseGenerator->handleException(ValidationException::forViolations($th), $contentType);
         }
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    private function handleNoOperationRequest(Throwable $previous, OpenApi $schema, OperationAddress $operationAddress, string $contentType): ResponseInterface
+    private function handleNoPathMatchedRequest(Throwable $previous, OpenApi $schema, OperationAddress $operationAddress, string $contentType): ResponseInterface
     {
         try {
             return $this->responseFaker->mockPossibleResponse($schema, $operationAddress, ['404', '400', '500', 'default'], $contentType);
@@ -169,7 +169,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
                     $th = ValidationException::forViolations($previous);
             }
 
-            return $this->errorReponseHandler->handleException($th, $contentType);
+            return $this->errorReponseGenerator->handleException($th, $contentType);
         }
     }
 
@@ -181,7 +181,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         try {
             return $this->responseFaker->mockPossibleResponse($schema, $operationAddress, ['401', '500', 'default'], $contentType);
         } catch (Throwable $th) {
-            return $this->errorReponseHandler->handleException(SecurityException::forUnauthorized($previous), $contentType);
+            return $this->errorReponseGenerator->handleException(SecurityException::forUnauthorized($previous), $contentType);
         }
     }
 
@@ -193,7 +193,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         try {
             return $this->responseFaker->mockPossibleResponse($schema, $operationAddress, ['422', '400', '500', 'default'], $contentType);
         } catch (Throwable $th) {
-            return $this->errorReponseHandler->handleException(ValidationException::forUnprocessableEntity($previous), $contentType);
+            return $this->errorReponseGenerator->handleException(ValidationException::forUnprocessableEntity($previous), $contentType);
         }
     }
 
@@ -202,6 +202,6 @@ class OpenApiMockMiddleware implements MiddlewareInterface
      */
     private function handleInvalidResponse(Throwable $previous, string $contentType): ResponseInterface
     {
-        return $this->errorReponseHandler->handleException(ValidationException::forViolations($previous), $contentType);
+        return $this->errorReponseGenerator->handleException(ValidationException::forViolations($previous), $contentType);
     }
 }
