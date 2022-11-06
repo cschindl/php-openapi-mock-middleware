@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock;
+namespace Cschindl\OpenAPIMock\Response;
 
 use cebe\openapi\spec\OpenApi;
+use Cschindl\OpenAPIMock\Exception\RequestException;
 use InvalidArgumentException;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Throwable;
 use Vural\OpenAPIFaker\Exception\NoExample;
 use Vural\OpenAPIFaker\Exception\NoPath;
 use Vural\OpenAPIFaker\Exception\NoResponse;
@@ -51,7 +53,7 @@ class ResponseFaker
      * @throws NoExample
      * @throws InvalidArgumentException
      */
-    public function mockPossibleResponse(
+    public function mock(
         OpenApi $schema,
         OperationAddress $operationAddress,
         $statusCodes,
@@ -72,8 +74,37 @@ class ResponseFaker
                 throw $th;
             }
 
-            return $this->mockPossibleResponse($schema, $operationAddress, $statusCodes, $contentType, $exampleName);
+            return $this->mock($schema, $operationAddress, $statusCodes, $contentType, $exampleName);
         }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function handleException(Throwable $th, ?string $contentType): ResponseInterface
+    {
+        if ($th instanceof RequestException) {
+            $error = [
+                'type' => $th->getType(),
+                'title' => $th->getTitle(),
+                'detail' => $th->getMessage(),
+                'status' => $th->getCode(),
+            ];
+            $statusCode =  $th->getCode();
+        } else {
+            $error = [
+                'type' => 'ERROR',
+                'title' => 'Unexpected error occurred',
+                'detail' => $th->getMessage(),
+                'status' => 500,
+            ];
+            $statusCode = 500;
+        }
+
+        $response = $this->responseFactory->createResponse();
+        $body = $this->streamFactory->createStream((string) json_encode($error));
+
+        return $response->withBody($body)->withStatus($statusCode)->withAddedHeader('Content-Type', $contentType ?? 'application/problem+json');
     }
 
     /**

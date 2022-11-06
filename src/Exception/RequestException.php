@@ -7,7 +7,7 @@ namespace Cschindl\OpenAPIMock\Exception;
 use InvalidArgumentException;
 use Throwable;
 
-class RequestException extends InvalidArgumentException implements RFC7807Interface
+class RequestException extends InvalidArgumentException
 {
     private string $type;
 
