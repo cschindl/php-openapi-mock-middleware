@@ -17,6 +17,7 @@ use Throwable;
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
     public const HEADER_CONTENT_TYPE = 'Content-Type';
+    public const HEADER_FAKER_ACTIVE = 'X-Faker-Active';
     public const HEADER_FAKER_STATUSCODE = 'X-Faker-StatusCode';
     public const HEADER_FAKER_EXAMPLE = 'X-Faker-Example';
     public const DEFAULT_CONTENT_TYPE = 'application/json';
@@ -43,12 +44,17 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $isActive = $this->isActive($request);
         $statusCode = $this->getStatusCode($request);
         $contentType = $this->getContentType($request);
         $exampleName = $this->getExample($request);
 
-        $validateRequest = true;
-        $validateResponse = true;
+        $validateRequest = false;
+        $validateResponse = false;
+
+        if (!$isActive) {
+            return $handler->handle($request);
+        }
 
         $requestResult = $this->requestValidator->parse($request, $validateRequest);
 
@@ -84,6 +90,13 @@ class OpenApiMockMiddleware implements MiddlewareInterface
                 $contentType
             );
         }
+    }
+
+    private function isActive(ServerRequestInterface $request): bool
+    {
+        $isActive = $request->getHeader(self::HEADER_FAKER_ACTIVE)[0] ?? false;
+
+        return (bool) $isActive;
     }
 
     private function getStatusCode(ServerRequestInterface $request): ?string
