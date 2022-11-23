@@ -9,22 +9,11 @@
             "email": "cschindl@gmx.de"
         }
     ],
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../php-openapi-faker"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/cschindl/php-openapi-faker"
-        }
-    ],
-    "minimum-stability": "dev",
     "require": {
         "php": ">=7.4",
         "ext-json": "*",
-        "canvural/php-openapi-faker": "dev-master",
-        "psr/cache": "^1.0|^2.0|^3.0",
+        "canvural/php-openapi-faker": "^2.1",
+        "psr/cache": "^1.0 || ^2.0 || ^3.0",
         "psr/http-factory": "^1.0",
         "psr/http-message": "^1.0",
         "psr/http-server-middleware": "^1.0"
@@ -65,16 +54,16 @@
         "sort-packages": true
     },
     "scripts": {
+        "check": [
+            "@phpcs",
+            "@phpstan",
+            "@test"
+        ],
         "phpcs": "vendor/bin/phpcs",
         "phpstan": "vendor/bin/phpstan analyse --ansi",
         "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/phpunit --coverage-clover=.build/phpunit/clover.xml --coverage-html=.build/phpunit",
         "test-fast": "vendor/bin/phpunit --color=always --testsuite Unit",
-        "test-fast-coverage": "vendor/bin/phpunit --testsuite Unit --coverage-clover=.build/phpunit/clover.xml --coverage-html=.build/phpunit",
-        "check": [
-            "@phpcs",
-            "@phpstan",
-            "@test"
-        ]
+        "test-fast-coverage": "vendor/bin/phpunit --testsuite Unit --coverage-clover=.build/phpunit/clover.xml --coverage-html=.build/phpunit"
     }
 }
