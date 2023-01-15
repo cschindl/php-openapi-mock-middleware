@@ -49,8 +49,8 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         $contentType = $this->getContentType($request);
         $exampleName = $this->getExample($request);
 
-        $validateRequest = false;
-        $validateResponse = false;
+        $validateRequest = true;
+        $validateResponse = true;
 
         if (!$isActive) {
             return $handler->handle($request);

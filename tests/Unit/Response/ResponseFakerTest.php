@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Unit;
+namespace Cschindl\OpenAPIMock\Tests\Unit\Response;
 
 use cebe\openapi\Reader;
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\ResponseFaker;
+use Cschindl\OpenAPIMock\Response\ResponseFaker;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
@@ -26,11 +26,9 @@ class ResponseFakerTest extends TestCase
 
     private OpenApi $schema;
 
-    /** @var ResponseFactoryInterface|ObjectProphecy */
-    private $responseFactory;
+    private ResponseFactoryInterface|ObjectProphecy $responseFactory;
 
-    /** @var StreamFactoryInterface|ObjectProphecy */
-    private $streamFactory;
+    private StreamFactoryInterface|ObjectProphecy $streamFactory;
 
     public function setUp(): void
     {
@@ -74,7 +72,7 @@ YAML;
             ['strategy' => Options::STRATEGY_STATIC]
         );
 
-        $response = $responseFaker->mockPossibleResponse($this->schema, $operationAddress, '200', 'application/json');
+        $response = $responseFaker->mock($this->schema, $operationAddress, '200', 'application/json');
 
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
@@ -89,7 +87,7 @@ YAML;
             ['strategy' => Options::STRATEGY_STATIC]
         );
 
-        $response = $responseFaker->mockPossibleResponse($this->schema, $operationAddress, ['201', '200'], 'application/json');
+        $response = $responseFaker->mock($this->schema, $operationAddress, ['201', '200'], 'application/json');
 
         self::assertInstanceOf(ResponseInterface::class, $response);
     }
@@ -106,7 +104,7 @@ YAML;
 
         $this->expectException(NoResponse::class);
 
-        $responseFaker->mockPossibleResponse($this->schema, $operationAddress, '400', 'application/json');
+        $responseFaker->mock($this->schema, $operationAddress, '400', 'application/json');
     }
 
     public function testMockPossibleResponseWithNoPath(): void
@@ -121,6 +119,6 @@ YAML;
 
         $this->expectException(NoPath::class);
 
-        $responseFaker->mockPossibleResponse($this->schema, $operationAddress, '200', 'application/json');
+        $responseFaker->mock($this->schema, $operationAddress, '200', 'application/json');
     }
 }

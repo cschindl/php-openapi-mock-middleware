@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock\Tests\Integration;
-
-use Cschindl\OpenAPIMock\ErrorResponseGenerator;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
-use Cschindl\OpenAPIMock\ResponseFaker;
+use Cschindl\OpenAPIMock\Request\RequestHandler;
+use Cschindl\OpenAPIMock\Response\ResponseFaker;
+use Cschindl\OpenAPIMock\Response\ResponseHandler;
+use Cschindl\OpenAPIMock\Validator\RequestValidator;
+use Cschindl\OpenAPIMock\Validator\ResponseValidator;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Stream;
@@ -31,7 +33,8 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/todos'));
         $request->getMethod()->willReturn('GET');
         $request->getCookieParams()->willReturn([]);
-        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_CONTENT_TYPE)->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
         $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
@@ -64,7 +67,8 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/hello'));
         $request->getMethod()->willReturn('GET');
         $request->getCookieParams()->willReturn([]);
-        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_CONTENT_TYPE)->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
         $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
@@ -91,7 +95,8 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/todos'));
         $request->getMethod()->willReturn('PUT');
         $request->getCookieParams()->willReturn([]);
-        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_CONTENT_TYPE)->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
         $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $handler = $this->prophesize(RequestHandlerInterface::class);
@@ -118,7 +123,8 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/todos'));
         $request->getMethod()->willReturn('POST');
         $request->getCookieParams()->willReturn([]);
-        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_CONTENT_TYPE)->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
         $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $request->getBody()->willReturn(Stream::create('{}'));
@@ -146,7 +152,8 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/todos'));
         $request->getMethod()->willReturn('DELETE');
         $request->getCookieParams()->willReturn([]);
-        $request->getHeader('Content-Type')->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_CONTENT_TYPE)->willReturn(['application/json']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
         $request->getHeader(Argument::any())->willReturn([]);
         $request->getQueryParams()->willReturn([]);
         $request->getBody()->willReturn(Stream::create('{}'));
@@ -178,18 +185,17 @@ class OpenApiMockMiddlewareTest extends TestCase
             'alwaysFakeOptionals' => true,
             'strategy' => Options::STRATEGY_STATIC,
         ];
+        $responseFaker = new ResponseFaker(
+            $psr17Factory,
+            $psr17Factory,
+            $settings
+        );
 
         return new OpenApiMockMiddleware(
-            $validatorBuilder,
-            new ResponseFaker(
-                $psr17Factory,
-                $psr17Factory,
-                $settings
-            ),
-            new ErrorResponseGenerator(
-                $psr17Factory,
-                $psr17Factory,
-            )
+            new RequestHandler($responseFaker),
+            new RequestValidator($validatorBuilder),
+            new ResponseHandler($responseFaker),
+            new ResponseValidator($validatorBuilder)
         );
     }
 

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock\Tests\Integration;
 
-use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\ErrorResponseGenerator;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
-use Cschindl\OpenAPIMock\ResponseFaker;
+use Cschindl\OpenAPIMock\Request\RequestHandler;
+use Cschindl\OpenAPIMock\Response\ResponseFaker;
+use Cschindl\OpenAPIMock\Response\ResponseHandler;
+use Cschindl\OpenAPIMock\Validator\RequestValidator;
+use Cschindl\OpenAPIMock\Validator\ResponseValidator;
 use League\OpenAPIValidation\PSR7\SchemaFactory\YamlFactory;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -17,7 +19,6 @@ use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Vural\OpenAPIFaker\OpenAPIFaker;
 use Vural\OpenAPIFaker\Options;
 use Vural\OpenAPIFaker\SchemaFaker\SchemaFaker;
 
@@ -105,6 +106,7 @@ class E2ETest extends TestCase
 
                     $request->getQueryParams()->willReturn($queryParams);
                     $request->getHeader(Argument::any())->willReturn($headers);
+                    $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
                     $request->getCookieParams()->willReturn($cookieParams);
                     $request->getUri()->willReturn(new Uri($path));
 
@@ -145,18 +147,17 @@ class E2ETest extends TestCase
             'alwaysFakeOptionals' => true,
             'strategy' => Options::STRATEGY_STATIC,
         ];
+        $responseFaker = new ResponseFaker(
+            $psr17Factory,
+            $psr17Factory,
+            $settings
+        );
 
         return new OpenApiMockMiddleware(
-            $validatorBuilder,
-            new ResponseFaker(
-                $psr17Factory,
-                $psr17Factory,
-                $settings
-            ),
-            new ErrorResponseGenerator(
-                $psr17Factory,
-                $psr17Factory,
-            )
+            new RequestHandler($responseFaker),
+            new RequestValidator($validatorBuilder),
+            new ResponseHandler($responseFaker),
+            new ResponseValidator($validatorBuilder)
         );
     }
 }
