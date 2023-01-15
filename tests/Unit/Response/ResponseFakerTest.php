@@ -79,9 +79,9 @@ YAML;
             ['strategy' => Options::STRATEGY_STATIC]
         );
 
-        $response = $responseFaker->mock($this->schema, $operationAddress, '200', 'application/json');
+        $result = $responseFaker->mock($this->schema, $operationAddress, '200', 'application/json');
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
     public function testMockWithMultipleStatusCodes(): void
@@ -94,9 +94,9 @@ YAML;
             ['strategy' => Options::STRATEGY_STATIC]
         );
 
-        $response = $responseFaker->mock($this->schema, $operationAddress, ['201', '200'], 'application/json');
+        $result = $responseFaker->mock($this->schema, $operationAddress, ['201', '200'], 'application/json');
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
     public function testMockWithNoResponse(): void
@@ -167,9 +167,9 @@ YAML;
             ['strategy' => Options::STRATEGY_STATIC]
         );
 
-        $response = $responseFaker->handleException(ValidationException::forNotFound(), 'application/json');
+        $result = $responseFaker->handleException(ValidationException::forNotFound(), 'application/json');
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
     public function testHandleExceptionWithUnexpectedException(): void
@@ -195,8 +195,8 @@ YAML;
             ['strategy' => Options::STRATEGY_STATIC]
         );
 
-        $response = $responseFaker->handleException(new Exception('Unexpected Error'), 'application/json');
+        $result = $responseFaker->handleException(new Exception('Unexpected Error'), 'application/json');
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 }

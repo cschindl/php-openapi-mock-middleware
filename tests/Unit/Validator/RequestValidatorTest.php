@@ -45,9 +45,9 @@ class RequestValidatorTest extends TestCase
 
         $responseHandler = new RequestValidator($validatorBuilder->reveal());
 
-        $request = $responseHandler->parse($request->reveal(), false);
+        $result = $responseHandler->parse($request->reveal(), false);
 
-        self::assertEquals(new RequestValidatorResult($schema, $operationAddress), $request);
+        self::assertEquals(new RequestValidatorResult($schema, $operationAddress), $result);
     }
 
     public function testParseWithValidRequestWithValidate(): void
@@ -73,9 +73,9 @@ class RequestValidatorTest extends TestCase
 
         $responseHandler = new RequestValidator($validatorBuilder->reveal());
 
-        $request = $responseHandler->parse($request->reveal(), true);
+        $result = $responseHandler->parse($request->reveal(), true);
 
-        self::assertEquals(new RequestValidatorResult($schema, $operationAddress), $request);
+        self::assertEquals(new RequestValidatorResult($schema, $operationAddress), $result);
     }
 
     public function testParseWithInValidRequest(): void
@@ -103,9 +103,9 @@ class RequestValidatorTest extends TestCase
 
         $responseHandler = new RequestValidator($validatorBuilder->reveal());
 
-        $request = $responseHandler->parse($request->reveal(), true);
+        $result = $responseHandler->parse($request->reveal(), true);
 
-        self::assertEquals(new RequestValidatorResult($schema, $operationAddress, $exception), $request);
+        self::assertEquals(new RequestValidatorResult($schema, $operationAddress, $exception), $result);
     }
 
     public function testParseWithNoResource(): void
@@ -131,8 +131,8 @@ class RequestValidatorTest extends TestCase
 
         $responseHandler = new RequestValidator($validatorBuilder->reveal());
 
-        $request = $responseHandler->parse($request->reveal(), true);
+        $result = $responseHandler->parse($request->reveal(), true);
 
-        self::assertEquals(new RequestValidatorResult($schema, $operationAddress, $exception), $request);
+        self::assertEquals(new RequestValidatorResult($schema, $operationAddress, $exception), $result);
     }
 }

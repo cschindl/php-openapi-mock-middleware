@@ -55,9 +55,9 @@ class OpenApiMockMiddlewareTest extends TestCase
             $responseValidator->reveal()
         );
 
-        $response = $middleware->process($request->reveal(), $handler->reveal());
+        $result = $middleware->process($request->reveal(), $handler->reveal());
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
     public function testHandleValidRequest(): void
@@ -69,7 +69,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
         $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_STATUSCODE)->willReturn(['400']);
         $request->getHeader(OpenApiMockMiddleware::HEADER_CONTENT_TYPE)->willReturn(['application/problem+json']);
-        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_EXAMPLE)->willReturn(['example']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_EXAMPLE)->willReturn(['testExample']);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([]);
@@ -85,7 +85,7 @@ class OpenApiMockMiddlewareTest extends TestCase
             $operationAddress,
             'application/problem+json',
             '400',
-            'example'
+            'testExample'
         )->willReturn($response);
 
         $responseValidator = $this->prophesize(ResponseValidator::class);
@@ -104,9 +104,9 @@ class OpenApiMockMiddlewareTest extends TestCase
             $responseValidator->reveal()
         );
 
-        $response = $middleware->process($request->reveal(), $handler->reveal());
+        $result = $middleware->process($request->reveal(), $handler->reveal());
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
     public function testHandleInValidRequest(): void
@@ -145,9 +145,9 @@ class OpenApiMockMiddlewareTest extends TestCase
             $responseValidator->reveal()
         );
 
-        $response = $middleware->process($request->reveal(), $handler->reveal());
+        $result = $middleware->process($request->reveal(), $handler->reveal());
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
     public function testHandleInValidResponse(): void
@@ -193,8 +193,8 @@ class OpenApiMockMiddlewareTest extends TestCase
             $responseValidator->reveal()
         );
 
-        $response = $middleware->process($request->reveal(), $handler->reveal());
+        $result = $middleware->process($request->reveal(), $handler->reveal());
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 }

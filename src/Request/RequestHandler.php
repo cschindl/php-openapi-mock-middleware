@@ -7,7 +7,6 @@ namespace Cschindl\OpenAPIMock\Request;
 use cebe\openapi\spec\OpenApi;
 use Cschindl\OpenAPIMock\Exception\RoutingException;
 use Cschindl\OpenAPIMock\Exception\SecurityException;
-use Cschindl\OpenAPIMock\Exception\UnknownException;
 use Cschindl\OpenAPIMock\Exception\ValidationException;
 use Cschindl\OpenAPIMock\Response\ResponseFaker;
 use InvalidArgumentException;
@@ -19,7 +18,6 @@ use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
-use Vural\OpenAPIFaker\Exception\NoExample;
 use Vural\OpenAPIFaker\Exception\NoPath as FakerNoPath;
 
 class RequestHandler
@@ -42,11 +40,7 @@ class RequestHandler
         ?string $statusCode = null,
         ?string $exampleName = null
     ): ResponseInterface {
-        try {
-            return $this->responseFaker->mock($schema, $operationAddress, $statusCode ?? ['200', '201'], $contentType, $exampleName);
-        } catch (NoExample $th) {
-            return $this->responseFaker->handleException(ValidationException::forNotFound($th), $contentType);
-        }
+        return $this->responseFaker->mock($schema, $operationAddress, $statusCode ?? ['200', '201'], $contentType, $exampleName);
     }
 
     /**

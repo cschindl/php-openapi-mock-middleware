@@ -28,8 +28,8 @@ class ResponseHandlerTest extends TestCase
 
         $responseHandler = new ResponseHandler($responseFaker->reveal());
 
-        $response = $responseHandler->handleInvalidResponse($previous, $contentType);
+        $result = $responseHandler->handleInvalidResponse($previous, $contentType);
 
-        self::assertInstanceOf(ResponseInterface::class, $response);
+        self::assertInstanceOf(ResponseInterface::class, $result);
     }
 }

@@ -31,9 +31,9 @@ class ResponseValidatorTest extends TestCase
 
         $responseHandler = new ResponseValidator($validatorBuilder->reveal());
 
-        $response = $responseHandler->parse($response->reveal(), $operationAddress->reveal(), false);
+        $result = $responseHandler->parse($response->reveal(), $operationAddress->reveal(), false);
 
-        self::assertEquals(new ResponseValidatorResult(), $response);
+        self::assertEquals(new ResponseValidatorResult(), $result);
     }
 
     public function testParseWithValidResponseWithValidate(): void
@@ -49,9 +49,9 @@ class ResponseValidatorTest extends TestCase
 
         $responseHandler = new ResponseValidator($validatorBuilder->reveal());
 
-        $response = $responseHandler->parse($response->reveal(), $operationAddress->reveal(), true);
+        $result = $responseHandler->parse($response->reveal(), $operationAddress->reveal(), true);
 
-        self::assertEquals(new ResponseValidatorResult(), $response);
+        self::assertEquals(new ResponseValidatorResult(), $result);
     }
 
     public function testParseWithInValidResponse(): void
@@ -69,8 +69,8 @@ class ResponseValidatorTest extends TestCase
 
         $responseHandler = new ResponseValidator($validatorBuilder->reveal());
 
-        $response = $responseHandler->parse($response->reveal(), $operationAddress->reveal(), true);
+        $result = $responseHandler->parse($response->reveal(), $operationAddress->reveal(), true);
 
-        self::assertEquals(new ResponseValidatorResult($exception), $response);
+        self::assertEquals(new ResponseValidatorResult($exception), $result);
     }
 }
