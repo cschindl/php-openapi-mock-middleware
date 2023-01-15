@@ -9,7 +9,6 @@ use Cschindl\OpenAPIMock\Exception\RoutingException;
 use League\OpenAPIValidation\PSR7\Exception\NoPath;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\PathFinder;
-use League\OpenAPIValidation\PSR7\SpecFinder;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
@@ -33,7 +32,8 @@ class RequestValidator
                 $operationAddress = $requestValidator->validate($request);
                 $schema = $requestValidator->getSchema();
 
-                if (!isset($schema->paths) || empty($schema->paths)) {
+                $paths = $schema->paths;
+                if (!isset($paths) || $paths->count() === 0) {
                     return new RequestValidatorResult(
                         $schema,
                         $operationAddress,
