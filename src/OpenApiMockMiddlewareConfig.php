@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock;
+namespace Cschindl\OpenApiMockMiddleware;
 
 use Vural\OpenAPIFaker\Options;
 

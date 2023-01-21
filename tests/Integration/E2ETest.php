@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Integration;
+namespace Cschindl\OpenApiMockMiddleware\Tests\Integration;
 
 use cebe\openapi\spec\Parameter;
 use cebe\openapi\spec\Schema;
-use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
-use Cschindl\OpenAPIMock\OpenApiMockMiddlewareConfig;
-use Cschindl\OpenAPIMock\OpenApiMockMiddlewareFactory;
+use Cschindl\OpenApiMockMiddleware\OpenApiMockMiddleware;
+use Cschindl\OpenApiMockMiddleware\OpenApiMockMiddlewareConfig;
+use Cschindl\OpenApiMockMiddleware\OpenApiMockMiddlewareFactory;
 use League\OpenAPIValidation\PSR7\SchemaFactory\YamlFactory;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Validator;
+namespace Cschindl\OpenApiMockMiddleware\Validator;
 
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;

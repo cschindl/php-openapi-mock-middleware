@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Unit;
+namespace Cschindl\OpenApiMockMiddleware\Tests\Unit;
 
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
-use Cschindl\OpenAPIMock\OpenApiMockMiddlewareConfig;
-use Cschindl\OpenAPIMock\Request\RequestHandler;
-use Cschindl\OpenAPIMock\Response\ResponseHandler;
-use Cschindl\OpenAPIMock\Validator\RequestValidator;
-use Cschindl\OpenAPIMock\Validator\RequestValidatorResult;
-use Cschindl\OpenAPIMock\Validator\ResponseValidator;
-use Cschindl\OpenAPIMock\Validator\ResponseValidatorResult;
+use Cschindl\OpenApiMockMiddleware\OpenApiMockMiddleware;
+use Cschindl\OpenApiMockMiddleware\OpenApiMockMiddlewareConfig;
+use Cschindl\OpenApiMockMiddleware\Request\RequestHandler;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseHandler;
+use Cschindl\OpenApiMockMiddleware\Validator\RequestValidator;
+use Cschindl\OpenApiMockMiddleware\Validator\RequestValidatorResult;
+use Cschindl\OpenApiMockMiddleware\Validator\ResponseValidator;
+use Cschindl\OpenApiMockMiddleware\Validator\ResponseValidatorResult;
 use League\OpenAPIValidation\PSR7\Exception\NoOperation;
 use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Exception;
+namespace Cschindl\OpenApiMockMiddleware\Exception;
 
 use Throwable;
 

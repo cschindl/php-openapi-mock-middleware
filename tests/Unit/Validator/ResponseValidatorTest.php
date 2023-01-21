@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Unit\Validator;
+namespace Cschindl\OpenApiMockMiddleware\Tests\Unit\Validator;
 
-use Cschindl\OpenAPIMock\Validator\ResponseValidator;
-use Cschindl\OpenAPIMock\Validator\ResponseValidatorResult;
+use Cschindl\OpenApiMockMiddleware\Validator\ResponseValidator;
+use Cschindl\OpenApiMockMiddleware\Validator\ResponseValidatorResult;
 use Exception;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\ResponseValidator as PSR7ResponseValidator;

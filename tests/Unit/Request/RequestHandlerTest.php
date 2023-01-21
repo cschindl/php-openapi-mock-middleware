@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Unit\Request;
+namespace Cschindl\OpenApiMockMiddleware\Tests\Unit\Request;
 
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\Exception\RoutingException;
-use Cschindl\OpenAPIMock\Exception\SecurityException;
-use Cschindl\OpenAPIMock\Exception\ValidationException;
-use Cschindl\OpenAPIMock\Request\RequestHandler;
-use Cschindl\OpenAPIMock\Response\ResponseFaker;
+use Cschindl\OpenApiMockMiddleware\Exception\RoutingException;
+use Cschindl\OpenApiMockMiddleware\Exception\SecurityException;
+use Cschindl\OpenApiMockMiddleware\Exception\ValidationException;
+use Cschindl\OpenApiMockMiddleware\Request\RequestHandler;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseFaker;
 use Exception;
 use League\OpenAPIValidation\PSR7\Exception\NoOperation;
 use League\OpenAPIValidation\PSR7\Exception\NoPath;

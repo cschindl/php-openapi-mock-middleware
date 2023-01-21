@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Response;
+namespace Cschindl\OpenApiMockMiddleware\Response;
 
-use Cschindl\OpenAPIMock\Exception\ValidationException;
+use Cschindl\OpenApiMockMiddleware\Exception\ValidationException;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;

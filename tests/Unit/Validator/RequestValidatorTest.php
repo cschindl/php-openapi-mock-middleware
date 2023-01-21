@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Unit\Validator;
+namespace Cschindl\OpenApiMockMiddleware\Tests\Unit\Validator;
 
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\Exception\RoutingException;
-use Cschindl\OpenAPIMock\Validator\RequestValidator;
-use Cschindl\OpenAPIMock\Validator\RequestValidatorResult;
+use Cschindl\OpenApiMockMiddleware\Exception\RoutingException;
+use Cschindl\OpenApiMockMiddleware\Validator\RequestValidator;
+use Cschindl\OpenApiMockMiddleware\Validator\RequestValidatorResult;
 use Exception;
 use League\OpenAPIValidation\PSR7\Exception\NoPath;
 use League\OpenAPIValidation\PSR7\OperationAddress;

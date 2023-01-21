@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock;
+namespace Cschindl\OpenApiMockMiddleware;
 
-use Cschindl\OpenAPIMock\Request\RequestHandler;
-use Cschindl\OpenAPIMock\Response\ResponseFaker;
-use Cschindl\OpenAPIMock\Response\ResponseHandler;
-use Cschindl\OpenAPIMock\Validator\RequestValidator;
-use Cschindl\OpenAPIMock\Validator\ResponseValidator;
+use Cschindl\OpenApiMockMiddleware\Request\RequestHandler;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseFaker;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseHandler;
+use Cschindl\OpenApiMockMiddleware\Validator\RequestValidator;
+use Cschindl\OpenApiMockMiddleware\Validator\ResponseValidator;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Http\Message\ResponseFactoryInterface;

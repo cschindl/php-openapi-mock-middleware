@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Validator;
+namespace Cschindl\OpenApiMockMiddleware\Validator;
 
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\Exception\RoutingException;
+use Cschindl\OpenApiMockMiddleware\Exception\RoutingException;
 use League\OpenAPIValidation\PSR7\Exception\NoPath;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use League\OpenAPIValidation\PSR7\PathFinder;

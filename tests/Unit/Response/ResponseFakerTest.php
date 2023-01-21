@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Unit\Response;
+namespace Cschindl\OpenApiMockMiddleware\Tests\Unit\Response;
 
 use cebe\openapi\Reader;
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\Exception\ValidationException;
-use Cschindl\OpenAPIMock\Response\ResponseFaker;
+use Cschindl\OpenApiMockMiddleware\Exception\ValidationException;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseFaker;
 use Exception;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use PHPUnit\Framework\TestCase;

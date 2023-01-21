@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Tests\Unit\Response;
+namespace Cschindl\OpenApiMockMiddleware\Tests\Unit\Response;
 
-use Cschindl\OpenAPIMock\Exception\ValidationException;
-use Cschindl\OpenAPIMock\Response\ResponseFaker;
-use Cschindl\OpenAPIMock\Response\ResponseHandler;
+use Cschindl\OpenApiMockMiddleware\Exception\ValidationException;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseFaker;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseHandler;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;

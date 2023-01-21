@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock\Response;
+namespace Cschindl\OpenApiMockMiddleware\Response;
 
 use cebe\openapi\spec\OpenApi;
-use Cschindl\OpenAPIMock\Exception\RequestException;
+use Cschindl\OpenApiMockMiddleware\Exception\RequestException;
 use InvalidArgumentException;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use Psr\Http\Message\ResponseFactoryInterface;

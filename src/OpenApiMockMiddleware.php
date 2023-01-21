@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Cschindl\OpenAPIMock;
+namespace Cschindl\OpenApiMockMiddleware;
 
-use Cschindl\OpenAPIMock\Request\RequestHandler;
-use Cschindl\OpenAPIMock\Response\ResponseHandler;
-use Cschindl\OpenAPIMock\Validator\RequestValidator;
-use Cschindl\OpenAPIMock\Validator\ResponseValidator;
+use Cschindl\OpenApiMockMiddleware\Request\RequestHandler;
+use Cschindl\OpenApiMockMiddleware\Response\ResponseHandler;
+use Cschindl\OpenApiMockMiddleware\Validator\RequestValidator;
+use Cschindl\OpenApiMockMiddleware\Validator\ResponseValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
