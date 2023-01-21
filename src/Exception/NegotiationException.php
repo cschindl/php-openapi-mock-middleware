@@ -15,10 +15,10 @@ class NegotiationException extends RequestException
     /**
      * @return NegotiationException
      */
-    public static function forNoComplexObjectText(?Throwable $previous = null): self
+    public static function forNoComplexObjectText(Throwable|null $previous = null): self
     {
         $title = 'Cannot serialise complex objects as text';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::NO_COMPLEX_OBJECT_TEXT, $title, $detail, 500, $previous);
     }
@@ -26,10 +26,10 @@ class NegotiationException extends RequestException
     /**
      * @return NegotiationException
      */
-    public static function forNoResponseDefined(?Throwable $previous = null): self
+    public static function forNoResponseDefined(Throwable|null $previous = null): self
     {
         $title = 'No response defined for the selected operation';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::NO_RESPONSE_DEFINED, $title, $detail, 500, $previous);
     }
@@ -37,10 +37,10 @@ class NegotiationException extends RequestException
     /**
      * @return NegotiationException
      */
-    public static function forInvalidContentType(?Throwable $previous = null): self
+    public static function forInvalidContentType(Throwable|null $previous = null): self
     {
         $title = 'Supported content types: list';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::INVALID_CONTENT_TYPE, $title, $detail, 415, $previous);
     }

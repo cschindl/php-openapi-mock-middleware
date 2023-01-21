@@ -15,12 +15,9 @@ use Throwable;
 
 class RequestValidator
 {
-    private ValidatorBuilder $validatorBuilder;
-
     public function __construct(
-        ValidatorBuilder $validatorBuilder
+        private ValidatorBuilder $validatorBuilder
     ) {
-        $this->validatorBuilder = $validatorBuilder;
     }
 
     public function parse(ServerRequestInterface $request, bool $validate): RequestValidatorResult
@@ -33,7 +30,7 @@ class RequestValidator
                 $schema = $requestValidator->getSchema();
 
                 $paths = $schema->paths;
-                if (!isset($paths) || $paths->count() === 0) {
+                if ($paths->count() === 0) {
                     return new RequestValidatorResult(
                         $schema,
                         $operationAddress,

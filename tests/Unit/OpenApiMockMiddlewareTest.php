@@ -6,6 +6,7 @@ namespace Cschindl\OpenAPIMock\Tests\Unit;
 
 use cebe\openapi\spec\OpenApi;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
+use Cschindl\OpenAPIMock\OpenApiMockMiddlewareConfig;
 use Cschindl\OpenAPIMock\Request\RequestHandler;
 use Cschindl\OpenAPIMock\Response\ResponseHandler;
 use Cschindl\OpenAPIMock\Validator\RequestValidator;
@@ -52,7 +53,8 @@ class OpenApiMockMiddlewareTest extends TestCase
             $requestHandler->reveal(),
             $requestValidator->reveal(),
             $responseHandler->reveal(),
-            $responseValidator->reveal()
+            $responseValidator->reveal(),
+            new OpenApiMockMiddlewareConfig(true, true)
         );
 
         $result = $middleware->process($request->reveal(), $handler->reveal());
@@ -101,7 +103,8 @@ class OpenApiMockMiddlewareTest extends TestCase
             $requestHandler->reveal(),
             $requestValidator->reveal(),
             $responseHandler->reveal(),
-            $responseValidator->reveal()
+            $responseValidator->reveal(),
+            new OpenApiMockMiddlewareConfig(true, true)
         );
 
         $result = $middleware->process($request->reveal(), $handler->reveal());
@@ -142,7 +145,8 @@ class OpenApiMockMiddlewareTest extends TestCase
             $requestHandler->reveal(),
             $requestValidator->reveal(),
             $responseHandler->reveal(),
-            $responseValidator->reveal()
+            $responseValidator->reveal(),
+            new OpenApiMockMiddlewareConfig(true, true)
         );
 
         $result = $middleware->process($request->reveal(), $handler->reveal());
@@ -190,7 +194,8 @@ class OpenApiMockMiddlewareTest extends TestCase
             $requestHandler->reveal(),
             $requestValidator->reveal(),
             $responseHandler->reveal(),
-            $responseValidator->reveal()
+            $responseValidator->reveal(),
+            new OpenApiMockMiddlewareConfig(true, true)
         );
 
         $result = $middleware->process($request->reveal(), $handler->reveal());

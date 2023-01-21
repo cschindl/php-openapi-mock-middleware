@@ -13,10 +13,10 @@ class SecurityException extends RequestException
     /**
      * @return SecurityException
      */
-    public static function forUnauthorized(?Throwable $previous = null): self
+    public static function forUnauthorized(Throwable|null $previous = null): self
     {
         $title = 'Invalid security scheme used';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::UNAUTHORIZED, $title, $detail, 401, $previous);
     }

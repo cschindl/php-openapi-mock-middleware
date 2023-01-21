@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Cschindl\OpenAPIMock;
 
 use Cschindl\OpenAPIMock\Request\RequestHandler;
-use Cschindl\OpenAPIMock\Validator\RequestValidator;
 use Cschindl\OpenAPIMock\Response\ResponseHandler;
+use Cschindl\OpenAPIMock\Validator\RequestValidator;
 use Cschindl\OpenAPIMock\Validator\ResponseValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -22,24 +22,13 @@ class OpenApiMockMiddleware implements MiddlewareInterface
     public const HEADER_FAKER_EXAMPLE = 'X-Faker-Example';
     public const DEFAULT_CONTENT_TYPE = 'application/json';
 
-    private RequestHandler $requestHandler;
-
-    private RequestValidator $requestValidator;
-
-    private ResponseHandler $responseHandler;
-
-    private ResponseValidator $responseValidator;
-
     public function __construct(
-        RequestHandler $requestHandler,
-        RequestValidator $requestValidator,
-        ResponseHandler $responseHandler,
-        ResponseValidator $responseValidator
+        private RequestHandler $requestHandler,
+        private RequestValidator $requestValidator,
+        private ResponseHandler $responseHandler,
+        private ResponseValidator $responseValidator,
+        private OpenApiMockMiddlewareConfig $config
     ) {
-        $this->requestHandler = $requestHandler;
-        $this->requestValidator = $requestValidator;
-        $this->responseHandler = $responseHandler;
-        $this->responseValidator = $responseValidator;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -49,17 +38,14 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         $contentType = $this->getContentType($request);
         $exampleName = $this->getExample($request);
 
-        $validateRequest = true;
-        $validateResponse = true;
-
         if (!$isActive) {
             return $handler->handle($request);
         }
 
-        $requestResult = $this->requestValidator->parse($request, $validateRequest);
+        $requestResult = $this->requestValidator->parse($request, $this->config->validateRequest());
 
         try {
-            if (!$requestResult->isValid()) {
+            if ($requestResult->getException() instanceof Throwable) {
                 throw $requestResult->getException();
             }
 
@@ -74,14 +60,14 @@ class OpenApiMockMiddleware implements MiddlewareInterface
             $responseResult = $this->responseValidator->parse(
                 $response,
                 $requestResult->getOperationAddress(),
-                $validateResponse
+                $this->config->validateResponse()
             );
 
-            if ($responseResult->isValid()) {
-                return $response;
+            if ($responseResult->getException() instanceof Throwable) {
+                return $this->responseHandler->handleInvalidResponse($responseResult->getException(), $contentType);
             }
 
-            return $this->responseHandler->handleInvalidResponse($responseResult->getException(), $contentType);
+            return $response;
         } catch (Throwable $th) {
             return $this->requestHandler->handleInvalidRequest(
                 $th,
@@ -99,7 +85,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         return (bool) $isActive;
     }
 
-    private function getStatusCode(ServerRequestInterface $request): ?string
+    private function getStatusCode(ServerRequestInterface $request): string|null
     {
         $statusCode = $request->getHeader(self::HEADER_FAKER_STATUSCODE)[0] ?? null;
 
@@ -113,7 +99,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
         return !empty($contentType) ? $contentType : self::DEFAULT_CONTENT_TYPE;
     }
 
-    private function getExample(ServerRequestInterface $request): ?string
+    private function getExample(ServerRequestInterface $request): string|null
     {
         $example = $request->getHeader(self::HEADER_FAKER_EXAMPLE)[0] ?? null;
 

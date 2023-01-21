@@ -3,12 +3,10 @@
 declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock\Tests\Integration;
+
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
-use Cschindl\OpenAPIMock\Request\RequestHandler;
-use Cschindl\OpenAPIMock\Response\ResponseFaker;
-use Cschindl\OpenAPIMock\Response\ResponseHandler;
-use Cschindl\OpenAPIMock\Validator\RequestValidator;
-use Cschindl\OpenAPIMock\Validator\ResponseValidator;
+use Cschindl\OpenAPIMock\OpenApiMockMiddlewareConfig;
+use Cschindl\OpenAPIMock\OpenApiMockMiddlewareFactory;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Stream;
@@ -179,23 +177,18 @@ class OpenApiMockMiddlewareTest extends TestCase
     {
         $validatorBuilder = (new ValidatorBuilder())->fromYaml($yaml);
         $psr17Factory = new Psr17Factory();
-        $settings = [
-            'minItems' => 5,
-            'maxItems' => 10,
-            'alwaysFakeOptionals' => true,
-            'strategy' => Options::STRATEGY_STATIC,
-        ];
-        $responseFaker = new ResponseFaker(
-            $psr17Factory,
-            $psr17Factory,
-            $settings
-        );
 
-        return new OpenApiMockMiddleware(
-            new RequestHandler($responseFaker),
-            new RequestValidator($validatorBuilder),
-            new ResponseHandler($responseFaker),
-            new ResponseValidator($validatorBuilder)
+        $options = (new Options())
+            ->setMinItems(1)
+            ->setMaxItems(10)
+            ->setAlwaysFakeOptionals(true)
+            ->setStrategy(Options::STRATEGY_STATIC);
+
+        return OpenApiMockMiddlewareFactory::createFromValidatorBuilder(
+            $psr17Factory,
+            $psr17Factory,
+            $validatorBuilder,
+            new OpenApiMockMiddlewareConfig(true, true, $options)
         );
     }
 

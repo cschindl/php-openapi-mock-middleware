@@ -16,7 +16,6 @@ use League\OpenAPIValidation\PSR7\Exception\NoPath;
 use League\OpenAPIValidation\PSR7\Exception\NoResponseCode;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidBody;
 use League\OpenAPIValidation\PSR7\Exception\Validation\InvalidSecurity;
-use League\OpenAPIValidation\PSR7\Exception\ValidationFailed;
 use League\OpenAPIValidation\PSR7\OperationAddress;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -65,9 +64,11 @@ class RequestHandlerTest extends TestCase
     }
 
     /**
+     * @param string[]|null $statusCodes
+     *
      * @dataProvider provideHandleInValidRequestData
      */
-    public function testHandleInValidRequest(Throwable $previous, ?array $statusCodes, ?Throwable $exception): void
+    public function testHandleInValidRequest(Throwable $previous, array|null $statusCodes, Throwable|null $exception): void
     {
         $schema = new OpenApi([]);
         $operationAddress = new OperationAddress('/test', 'GET');
@@ -85,28 +86,31 @@ class RequestHandlerTest extends TestCase
         self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
+    /**
+     * @return mixed[]
+     */
     public function provideHandleInValidRequestData(): array
     {
         return [
             'NoPath' => [
                 NoPath::fromPath('/test'),
                 ['404', '400', '500', 'default'],
-                null
+                null,
             ],
             'FakerNoPath' => [
                 FakerNoPath::forPathAndMethod('/test', 'GET'),
                 ['404', '400', '500', 'default'],
-                null
+                null,
             ],
             'InvalidSecurity' => [
                 InvalidSecurity::fromAddr(new OperationAddress('/test', 'GET')),
                 ['401', '500', 'default'],
-                null
+                null,
             ],
             'ValidationFailed' => [
                 InvalidBody::becauseBodyIsNotValidJson('invalid json', new OperationAddress('/test', 'GET')),
                 ['422', '400', '500', 'default'],
-                null
+                null,
             ],
             'Throwable' => [
                 new Exception('Invalid Request'),
@@ -157,6 +161,9 @@ class RequestHandlerTest extends TestCase
         self::assertInstanceOf(ResponseInterface::class, $result);
     }
 
+    /**
+     * @return mixed[]
+     */
     public function provideHandleNoPathMatchedRequestWithoutMatchingStatusCodeData(): array
     {
         return [

@@ -16,33 +16,22 @@ use Vural\OpenAPIFaker\Exception\NoExample;
 use Vural\OpenAPIFaker\Exception\NoPath;
 use Vural\OpenAPIFaker\Exception\NoResponse;
 use Vural\OpenAPIFaker\OpenAPIFaker;
+use Vural\OpenAPIFaker\Options;
 
+use function array_filter;
 use function array_shift;
 use function is_string;
 use function json_encode;
 
 class ResponseFaker
 {
-    private ResponseFactoryInterface $responseFactory;
+    private OpenAPIFaker|null $faker = null;
 
-    private StreamFactoryInterface $streamFactory;
-
-    /** @var array{minItems?: int|null, maxItems?: int|null, alwaysFakeOptionals?: bool, strategy?: string} */
-    private array $fakerOptions;
-
-    private ?OpenAPIFaker $faker = null;
-
-    /**
-     * @param array{minItems?: int|null, maxItems?: int|null, alwaysFakeOptionals?: bool, strategy?: string} $fakerOptions
-     */
     public function __construct(
-        ResponseFactoryInterface $responseFactory,
-        StreamFactoryInterface $streamFactory,
-        array $fakerOptions
+        private ResponseFactoryInterface $responseFactory,
+        private StreamFactoryInterface $streamFactory,
+        private Options $options
     ) {
-        $this->responseFactory = $responseFactory;
-        $this->streamFactory = $streamFactory;
-        $this->fakerOptions = $fakerOptions;
     }
 
     /**
@@ -56,9 +45,9 @@ class ResponseFaker
     public function mock(
         OpenApi $schema,
         OperationAddress $operationAddress,
-        $statusCodes,
+        array|string $statusCodes,
         string $contentType = 'application/json',
-        ?string $exampleName = null
+        string|null $exampleName = null
     ): ResponseInterface {
         if (is_string($statusCodes)) {
             $statusCodes = [$statusCodes];
@@ -81,7 +70,7 @@ class ResponseFaker
     /**
      * @throws InvalidArgumentException
      */
-    public function handleException(Throwable $th, ?string $contentType): ResponseInterface
+    public function handleException(Throwable $th, string|null $contentType): ResponseInterface
     {
         if ($th instanceof RequestException) {
             $error = [
@@ -118,7 +107,7 @@ class ResponseFaker
         OperationAddress $operationAddress,
         string $statusCode = '200',
         string $contentType = 'application/json',
-        ?string $exampleName = null
+        string|null $exampleName = null
     ): ResponseInterface {
         $faker = $this->createFaker($schema);
 
@@ -141,7 +130,12 @@ class ResponseFaker
             return $this->faker;
         }
 
-        $this->faker = OpenAPIFaker::createFromSchema($schema)->setOptions($this->fakerOptions);
+        $this->faker = OpenAPIFaker::createFromSchema($schema)->setOptions(array_filter([
+            'minItems' => $this->options->getMaxItems(),
+            'maxItems' => $this->options->getMaxItems(),
+            'alwaysFakeOptionals' => $this->options->getAlwaysFakeOptionals(),
+            'strategy' => $this->options->getStrategy(),
+        ]));
 
         return $this->faker;
     }

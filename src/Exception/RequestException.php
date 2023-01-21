@@ -13,7 +13,7 @@ class RequestException extends InvalidArgumentException
 
     private string $title;
 
-    public function __construct(string $type, string $title, ?string $detail = null, int $code = 0, ?Throwable $previous = null)
+    public function __construct(string $type, string $title, string|null $detail = null, int $code = 0, Throwable|null $previous = null)
     {
         parent::__construct($detail ?? $title, $code, $previous);
 

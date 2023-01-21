@@ -13,10 +13,10 @@ class UnknownException extends RequestException
     /**
      * @return UnknownException
      */
-    public static function forUnexpectedErrorOccurred(?Throwable $previous = null): self
+    public static function forUnexpectedErrorOccurred(Throwable|null $previous = null): self
     {
         $title = 'Unexpected error occurred';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::UNEXPECTED_ERROR_OCCURRED, $title, $detail, 500, $previous);
     }

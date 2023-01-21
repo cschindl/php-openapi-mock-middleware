@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace Cschindl\OpenAPIMock\Response;
 
 use Cschindl\OpenAPIMock\Exception\ValidationException;
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Throwable;
 
 class ResponseHandler
 {
-    private ResponseFaker $responseFaker;
-
     public function __construct(
-        ResponseFaker $responseFaker
+        private ResponseFaker $responseFaker
     ) {
-        $this->responseFaker = $responseFaker;
     }
 
     /**

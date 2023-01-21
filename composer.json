@@ -10,8 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=7.4",
-        "ext-json": "*",
+        "php": "^8.0 || ^8.1 || ^8.2",
         "canvural/php-openapi-faker": "^2.1",
         "psr/cache": "^1.0 || ^2.0 || ^3.0",
         "psr/http-factory": "^1.0",

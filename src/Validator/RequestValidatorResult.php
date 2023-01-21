@@ -10,16 +10,10 @@ use Throwable;
 
 class RequestValidatorResult
 {
-    private OpenApi $schema;
-
-    private OperationAddress $operationAddress;
-
-    private ?Throwable $exception;
-
     public function __construct(
-        OpenApi $schema,
-        OperationAddress $operationAddress,
-        ?Throwable $exception = null
+        private OpenApi $schema,
+        private OperationAddress $operationAddress,
+        private Throwable|null $exception = null
     ) {
         $this->schema = $schema;
         $this->operationAddress = $operationAddress;
@@ -36,7 +30,7 @@ class RequestValidatorResult
         return $this->operationAddress;
     }
 
-    public function getException(): ?Throwable
+    public function getException(): Throwable|null
     {
         return $this->exception;
     }

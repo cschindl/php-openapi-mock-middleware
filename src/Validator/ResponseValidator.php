@@ -11,12 +11,9 @@ use Throwable;
 
 class ResponseValidator
 {
-    private ValidatorBuilder $validatorBuilder;
-
     public function __construct(
-        ValidatorBuilder $validatorBuilder
+        private ValidatorBuilder $validatorBuilder
     ) {
-        $this->validatorBuilder = $validatorBuilder;
     }
 
     public function parse(ResponseInterface $response, OperationAddress $operationAddress, bool $validate): ResponseValidatorResult

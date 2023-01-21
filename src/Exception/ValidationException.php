@@ -18,7 +18,7 @@ class ValidationException extends RequestException
     /**
      * @return ValidationException
      */
-    public static function forUnprocessableEntity(?Throwable $previous = null): self
+    public static function forUnprocessableEntity(Throwable|null $previous = null): self
     {
         $title = 'Invalid request';
 
@@ -38,10 +38,10 @@ class ValidationException extends RequestException
     /**
      * @return ValidationException
      */
-    public static function forNotAcceptable(?Throwable $previous = null): self
+    public static function forNotAcceptable(Throwable|null $previous = null): self
     {
         $title = 'The server cannot produce a representation for your accept header';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::NOT_ACCEPTABLE, $title, $detail, 406, $previous);
     }
@@ -49,10 +49,10 @@ class ValidationException extends RequestException
     /**
      * @return ValidationException
      */
-    public static function forNotFound(?Throwable $previous = null): self
+    public static function forNotFound(Throwable|null $previous = null): self
     {
         $title = 'The server cannot find the requested content';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::NOT_FOUND, $title, $detail, 404, $previous);
     }
@@ -60,10 +60,10 @@ class ValidationException extends RequestException
     /**
      * @return ValidationException
      */
-    public static function forViolations(?Throwable $previous = null): self
+    public static function forViolations(Throwable|null $previous = null): self
     {
         $title = 'Request/Response not valid';
-        $detail = $previous !== null ? $previous->getMessage() : '';
+        $detail = $previous?->getMessage() ?? '';
 
         return new self(self::VIOLATIONS, $title, $detail, 500, $previous);
     }

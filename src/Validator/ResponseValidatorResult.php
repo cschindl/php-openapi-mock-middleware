@@ -8,15 +8,12 @@ use Throwable;
 
 class ResponseValidatorResult
 {
-    private ?Throwable $exception;
-
     public function __construct(
-        ?Throwable $exception = null
+        private Throwable|null $exception = null
     ) {
-        $this->exception = $exception;
     }
 
-    public function getException(): ?Throwable
+    public function getException(): Throwable|null
     {
         return $this->exception;
     }

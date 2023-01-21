@@ -37,8 +37,8 @@ class RequestHandler
         OpenApi $schema,
         OperationAddress $operationAddress,
         string $contentType,
-        ?string $statusCode = null,
-        ?string $exampleName = null
+        string|null $statusCode = null,
+        string|null $exampleName = null
     ): ResponseInterface {
         return $this->responseFaker->mock($schema, $operationAddress, $statusCode ?? ['200', '201'], $contentType, $exampleName);
     }

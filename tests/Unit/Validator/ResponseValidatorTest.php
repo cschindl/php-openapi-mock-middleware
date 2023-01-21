@@ -23,7 +23,7 @@ class ResponseValidatorTest extends TestCase
         $response = $this->prophesize(ResponseInterface::class);
         $operationAddress = $this->prophesize(OperationAddress::class);
 
-        $responseValidator  = $this->prophesize(PSR7ResponseValidator::class);
+        $responseValidator = $this->prophesize(PSR7ResponseValidator::class);
         $responseValidator->validate($operationAddress, $response)->shouldNotBeCalled();
 
         $validatorBuilder = $this->prophesize(ValidatorBuilder::class);
@@ -41,7 +41,7 @@ class ResponseValidatorTest extends TestCase
         $response = $this->prophesize(ResponseInterface::class);
         $operationAddress = $this->prophesize(OperationAddress::class);
 
-        $responseValidator  = $this->prophesize(PSR7ResponseValidator::class);
+        $responseValidator = $this->prophesize(PSR7ResponseValidator::class);
         $responseValidator->validate($operationAddress, $response)->shouldBeCalled();
 
         $validatorBuilder = $this->prophesize(ValidatorBuilder::class);
@@ -61,7 +61,7 @@ class ResponseValidatorTest extends TestCase
 
         $exception = new Exception('Invalid response');
 
-        $responseValidator  = $this->prophesize(PSR7ResponseValidator::class);
+        $responseValidator = $this->prophesize(PSR7ResponseValidator::class);
         $responseValidator->validate($operationAddress, $response)->willThrow($exception);
 
         $validatorBuilder = $this->prophesize(ValidatorBuilder::class);

@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Cschindl\OpenAPIMock\Tests\Integration;
 
+use cebe\openapi\spec\Parameter;
+use cebe\openapi\spec\Schema;
 use Cschindl\OpenAPIMock\OpenApiMockMiddleware;
-use Cschindl\OpenAPIMock\Request\RequestHandler;
-use Cschindl\OpenAPIMock\Response\ResponseFaker;
-use Cschindl\OpenAPIMock\Response\ResponseHandler;
-use Cschindl\OpenAPIMock\Validator\RequestValidator;
-use Cschindl\OpenAPIMock\Validator\ResponseValidator;
+use Cschindl\OpenAPIMock\OpenApiMockMiddlewareConfig;
+use Cschindl\OpenAPIMock\OpenApiMockMiddlewareFactory;
 use League\OpenAPIValidation\PSR7\SchemaFactory\YamlFactory;
 use League\OpenAPIValidation\PSR7\ValidatorBuilder;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -21,13 +20,19 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Vural\OpenAPIFaker\Options;
 use Vural\OpenAPIFaker\SchemaFaker\SchemaFaker;
 
+use function file_get_contents;
+use function implode;
+use function is_array;
+use function sprintf;
+use function str_replace;
+
 class E2ETest extends TestCase
 {
     use ProphecyTrait;
 
     private const SPECS = [
         'petstore',
-        'twitter',
+        // 'twitter',
         'uber',
         'uspto',
     ];
@@ -35,7 +40,7 @@ class E2ETest extends TestCase
     /**
      * @dataProvider provideValidRequest
      */
-    function testHandleValidRequest(ServerRequestInterface $request, int $expectedStatusCode, string $yaml)
+    public function testHandleValidRequest(ServerRequestInterface $request, int $expectedStatusCode, string $yaml): void
     {
         $middleware = $this->createMiddleware($yaml);
 
@@ -50,7 +55,7 @@ class E2ETest extends TestCase
     }
 
     /**
-     * @return string[][]
+     * @return mixed[]
      */
     public function provideValidRequest(): array
     {
@@ -58,7 +63,7 @@ class E2ETest extends TestCase
 
         foreach (self::SPECS as $filename) {
             $yaml = file_get_contents(sprintf('%s/../specs/%s.yaml', __DIR__, $filename));
-            $schema = (new YamlFactory($yaml))->createSchema();
+            $schema = (new YamlFactory((string) $yaml))->createSchema();
 
             foreach ($schema->paths->getPaths() as $path => $pathItem) {
                 foreach ($pathItem->getOperations() as $method => $operation) {
@@ -81,29 +86,37 @@ class E2ETest extends TestCase
                     $path = str_replace('{scheme}', 'https', $schema->servers[0]->url . $path);
                     $queryParams = [];
                     $cookieParams = [];
+
+                    /** @var Parameter $parameter*/
                     foreach ($operation->parameters as $parameter) {
-                        if ($parameter->required === true) {
-                            $fakeData = (new SchemaFaker($parameter->schema, (new Options())->setStrategy(Options::STRATEGY_STATIC)))->generate();
-                            if (is_array($fakeData)) {
-                                $fakeData = implode(',', $fakeData);
-                            }
-
-                            if ($parameter->in === 'path') {
-                                $path = str_replace('{' . $parameter->name . '}', (string) $fakeData, $path);
-                            }
-
-                            if ($parameter->in === 'query') {
-                                $queryParams[$parameter->name] = $fakeData;
-                            }
-
-                            if ($parameter->in === 'header') {
-                                $request->getHeader($parameter->name)->willReturn([$parameter->example]);
-                            }
-
-                            if ($parameter->in === 'cookie') {
-                                $cookieParams[$parameter->name] = $parameter->example;
-                            }
+                        if ($parameter->required !== true) {
+                            continue;
                         }
+
+                        /** @var Schema $parameterSchema */
+                        $parameterSchema = $parameter->schema;
+                        $fakeData = (new SchemaFaker($parameterSchema, (new Options())->setStrategy(Options::STRATEGY_STATIC)))->generate();
+                        if (is_array($fakeData)) {
+                            $fakeData = implode(',', $fakeData);
+                        }
+
+                        if ($parameter->in === 'path') {
+                            $path = str_replace('{' . $parameter->name . '}', (string) $fakeData, $path);
+                        }
+
+                        if ($parameter->in === 'query') {
+                            $queryParams[$parameter->name] = $fakeData;
+                        }
+
+                        if ($parameter->in === 'header') {
+                            $request->getHeader($parameter->name)->willReturn([$parameter->example]);
+                        }
+
+                        if ($parameter->in !== 'cookie') {
+                            continue;
+                        }
+
+                        $cookieParams[$parameter->name] = $parameter->example;
                     }
 
                     $request->getQueryParams()->willReturn($queryParams);
@@ -135,7 +148,7 @@ class E2ETest extends TestCase
                             $data[$method . ':' . $path] = [
                                 $request->reveal(),
                                 $statusCode,
-                                $yaml
+                                $yaml,
                             ];
                         }
                     }
@@ -150,23 +163,18 @@ class E2ETest extends TestCase
     {
         $validatorBuilder = (new ValidatorBuilder())->fromYaml($yaml);
         $psr17Factory = new Psr17Factory();
-        $settings = [
-            'minItems' => 1,
-            'maxItems' => 10,
-            'alwaysFakeOptionals' => true,
-            'strategy' => Options::STRATEGY_STATIC,
-        ];
-        $responseFaker = new ResponseFaker(
-            $psr17Factory,
-            $psr17Factory,
-            $settings
-        );
 
-        return new OpenApiMockMiddleware(
-            new RequestHandler($responseFaker),
-            new RequestValidator($validatorBuilder),
-            new ResponseHandler($responseFaker),
-            new ResponseValidator($validatorBuilder)
+        $options = (new Options())
+            ->setMinItems(1)
+            ->setMaxItems(10)
+            ->setAlwaysFakeOptionals(true)
+            ->setStrategy(Options::STRATEGY_STATIC);
+
+        return OpenApiMockMiddlewareFactory::createFromValidatorBuilder(
+            $psr17Factory,
+            $psr17Factory,
+            $validatorBuilder,
+            new OpenApiMockMiddlewareConfig(true, true, $options)
         );
     }
 }

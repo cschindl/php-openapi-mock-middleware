@@ -36,7 +36,7 @@ class RequestValidatorTest extends TestCase
         ]);
         $operationAddress = new OperationAddress('/test', 'GET');
 
-        $requestValidator  = $this->prophesize(ServerRequestValidator::class);
+        $requestValidator = $this->prophesize(ServerRequestValidator::class);
         $requestValidator->validate($request)->shouldNotBeCalled();
         $requestValidator->getSchema()->willReturn($schema);
 
@@ -64,7 +64,7 @@ class RequestValidatorTest extends TestCase
         ]);
         $operationAddress = new OperationAddress('/test', 'GET');
 
-        $requestValidator  = $this->prophesize(ServerRequestValidator::class);
+        $requestValidator = $this->prophesize(ServerRequestValidator::class);
         $requestValidator->validate($request)->willReturn($operationAddress)->shouldBeCalled();
         $requestValidator->getSchema()->willReturn($schema);
 
@@ -94,7 +94,7 @@ class RequestValidatorTest extends TestCase
 
         $exception = new Exception('Invalid request');
 
-        $requestValidator  = $this->prophesize(ServerRequestValidator::class);
+        $requestValidator = $this->prophesize(ServerRequestValidator::class);
         $requestValidator->validate($request)->willThrow($exception);
         $requestValidator->getSchema()->willReturn($schema);
 
@@ -122,7 +122,7 @@ class RequestValidatorTest extends TestCase
 
         $exception = RoutingException::forNoResourceProvided(NoPath::fromPath('/test'));
 
-        $requestValidator  = $this->prophesize(ServerRequestValidator::class);
+        $requestValidator = $this->prophesize(ServerRequestValidator::class);
         $requestValidator->validate($request)->willReturn($operationAddress)->shouldBeCalled();
         $requestValidator->getSchema()->willReturn($schema);
 
