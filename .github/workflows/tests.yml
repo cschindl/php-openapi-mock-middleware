@@ -61,7 +61,7 @@ jobs:
         run: "composer normalize --dry-run"
 
       - name: "Run phpcs"
-        run: "composer codestyle"
+        run: "composer phpcs"
 
   static-code-analysis:
     name: "Static Code Analysis"
