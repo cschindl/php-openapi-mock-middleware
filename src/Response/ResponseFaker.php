@@ -121,7 +121,7 @@ class ResponseFaker
         $response = $this->responseFactory->createResponse();
         $body = $this->streamFactory->createStream((string) json_encode($fakeData));
 
-        return $response->withBody($body)->withAddedHeader('Content-Type', $contentType)->withStatus((int) $statusCode);
+        return $response->withStatus((int) $statusCode)->withBody($body)->withAddedHeader('Content-Type', $contentType);
     }
 
     private function createFaker(OpenApi $schema): OpenAPIFaker
@@ -135,7 +135,7 @@ class ResponseFaker
             'maxItems' => $this->options->getMaxItems(),
             'alwaysFakeOptionals' => $this->options->getAlwaysFakeOptionals(),
             'strategy' => $this->options->getStrategy(),
-        ]));
+        ], fn ($v) => $v !== null));
 
         return $this->faker;
     }
