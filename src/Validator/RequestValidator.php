@@ -29,8 +29,7 @@ class RequestValidator
                 $operationAddress = $requestValidator->validate($request);
                 $schema = $requestValidator->getSchema();
 
-                $paths = $schema->paths;
-                if ($paths->count() === 0) {
+                if ($schema->paths->count() === 0) {
                     return new RequestValidatorResult(
                         $schema,
                         $operationAddress,

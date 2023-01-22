@@ -1,4 +1,4 @@
-# php-openapi-faker
+# php-openapi-mock-middleware
 
 ![Tests](https://github.com/cschindl/php-openapi-mock-middleware/workflows/Tests/badge.svg)
 [![PHPStan](https://img.shields.io/badge/PHPStan-Level%20Max-brightgreen.svg?style=flat&logo=php)](https://phpstan.org)
