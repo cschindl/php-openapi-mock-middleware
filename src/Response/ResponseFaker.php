@@ -135,7 +135,7 @@ class ResponseFaker
             'maxItems' => $this->options->getMaxItems(),
             'alwaysFakeOptionals' => $this->options->getAlwaysFakeOptionals(),
             'strategy' => $this->options->getStrategy(),
-        ], fn ($v) => $v !== null));
+        ], static fn ($v) => $v !== null));
 
         return $this->faker;
     }
