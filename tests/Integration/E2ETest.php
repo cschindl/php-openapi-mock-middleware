@@ -86,7 +86,7 @@ class E2ETest extends TestCase
                     }
 
                     $request = $this->prophesize(ServerRequestInterface::class);
-                    $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
+                    $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_ACTIVE)->willReturn(['true']);
                     $request->getMethod()->willReturn($method);
 
                     $path = str_replace('{scheme}', 'https', $schema->servers[0]->url . $path);
@@ -138,7 +138,7 @@ class E2ETest extends TestCase
                             continue;
                         }
 
-                        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_STATUSCODE)->willReturn([(string) $statusCode]);
+                        $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_STATUSCODE)->willReturn([(string) $statusCode]);
 
                         foreach ($response->content as $contentType => $mediaType) {
                             if ($mediaType->schema === null) {
@@ -175,10 +175,10 @@ class E2ETest extends TestCase
             ->setStrategy(Options::STRATEGY_STATIC);
 
         return OpenApiMockMiddlewareFactory::createFromValidatorBuilder(
-            $psr17Factory,
-            $psr17Factory,
             $validatorBuilder,
-            new OpenApiMockMiddlewareConfig(true, true, $options)
+            new OpenApiMockMiddlewareConfig(true, true, $options),
+            $psr17Factory,
+            $psr17Factory
         );
     }
 }

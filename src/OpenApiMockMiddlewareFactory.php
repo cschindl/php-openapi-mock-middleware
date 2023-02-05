@@ -16,11 +16,31 @@ use Psr\Http\Message\StreamFactoryInterface;
 
 class OpenApiMockMiddlewareFactory
 {
-    public static function createFromYamlFile(
-        string $pathToYaml,
+    public static function createFromYaml(
+        string $yaml,
+        OpenApiMockMiddlewareConfig $config,
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
-        OpenApiMockMiddlewareConfig|null $config = null,
+        CacheItemPoolInterface|null $cache = null
+    ): OpenApiMockMiddleware {
+        $validatorBuilder = (new ValidatorBuilder())->fromYaml($yaml);
+        if ($cache instanceof CacheItemPoolInterface) {
+            $validatorBuilder->setCache($cache);
+        }
+
+        return self::createFromValidatorBuilder(
+            $validatorBuilder,
+            $config,
+            $responseFactory,
+            $streamFactory
+        );
+    }
+
+    public static function createFromYamlFile(
+        string $pathToYaml,
+        OpenApiMockMiddlewareConfig $config,
+        ResponseFactoryInterface $responseFactory,
+        StreamFactoryInterface $streamFactory,
         CacheItemPoolInterface|null $cache = null
     ): OpenApiMockMiddleware {
         $validatorBuilder = (new ValidatorBuilder())->fromYamlFile($pathToYaml);
@@ -29,18 +49,38 @@ class OpenApiMockMiddlewareFactory
         }
 
         return self::createFromValidatorBuilder(
-            $responseFactory,
-            $streamFactory,
             $validatorBuilder,
-            $config
+            $config,
+            $responseFactory,
+            $streamFactory
+        );
+    }
+
+    public static function createFromJson(
+        string $json,
+        OpenApiMockMiddlewareConfig $config,
+        ResponseFactoryInterface $responseFactory,
+        StreamFactoryInterface $streamFactory,
+        CacheItemPoolInterface|null $cache = null
+    ): OpenApiMockMiddleware {
+        $validatorBuilder = (new ValidatorBuilder())->fromJson($json);
+        if ($cache instanceof CacheItemPoolInterface) {
+            $validatorBuilder->setCache($cache);
+        }
+
+        return self::createFromValidatorBuilder(
+            $validatorBuilder,
+            $config,
+            $responseFactory,
+            $streamFactory
         );
     }
 
     public static function createFromJsonFile(
         string $pathToJson,
+        OpenApiMockMiddlewareConfig $config,
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
-        OpenApiMockMiddlewareConfig|null $config = null,
         CacheItemPoolInterface|null $cache = null
     ): OpenApiMockMiddleware {
         $validatorBuilder = (new ValidatorBuilder())->fromJsonFile($pathToJson);
@@ -49,21 +89,19 @@ class OpenApiMockMiddlewareFactory
         }
 
         return self::createFromValidatorBuilder(
-            $responseFactory,
-            $streamFactory,
             $validatorBuilder,
-            $config
+            $config,
+            $responseFactory,
+            $streamFactory
         );
     }
 
     public static function createFromValidatorBuilder(
+        ValidatorBuilder $validatorBuilder,
+        OpenApiMockMiddlewareConfig $config,
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory,
-        ValidatorBuilder $validatorBuilder,
-        OpenApiMockMiddlewareConfig|null $config = null
     ): OpenApiMockMiddleware {
-        $config = $config ?: new OpenApiMockMiddlewareConfig();
-
         $reponseFaker = new ResponseFaker(
             $responseFactory,
             $streamFactory,

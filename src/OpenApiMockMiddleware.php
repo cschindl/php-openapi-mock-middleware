@@ -14,12 +14,17 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Throwable;
 
+use function filter_var;
+
+use const FILTER_VALIDATE_BOOLEAN;
+
 class OpenApiMockMiddleware implements MiddlewareInterface
 {
+    public const HEADER_OPENAPI_MOCK_ACTIVE = 'X-OpenApi-Mock-Active';
+    public const HEADER_OPENAPI_MOCK_STATUSCODE = 'X-OpenApi-Mock-StatusCode';
+    public const HEADER_OPENAPI_MOCK_EXAMPLE = 'X-OpenApi-Mock-Example';
+
     public const HEADER_CONTENT_TYPE = 'Content-Type';
-    public const HEADER_FAKER_ACTIVE = 'X-Faker-Active';
-    public const HEADER_FAKER_STATUSCODE = 'X-Faker-StatusCode';
-    public const HEADER_FAKER_EXAMPLE = 'X-Faker-Example';
     public const DEFAULT_CONTENT_TYPE = 'application/json';
 
     public function __construct(
@@ -80,14 +85,14 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
     private function isActive(ServerRequestInterface $request): bool
     {
-        $isActive = $request->getHeader(self::HEADER_FAKER_ACTIVE)[0] ?? false;
+        $isActive = $request->getHeader(self::HEADER_OPENAPI_MOCK_ACTIVE)[0] ?? false;
 
-        return (bool) $isActive;
+        return filter_var($isActive, FILTER_VALIDATE_BOOLEAN);
     }
 
     private function getStatusCode(ServerRequestInterface $request): string|null
     {
-        $statusCode = $request->getHeader(self::HEADER_FAKER_STATUSCODE)[0] ?? null;
+        $statusCode = $request->getHeader(self::HEADER_OPENAPI_MOCK_STATUSCODE)[0] ?? null;
 
         return !empty($statusCode) ? $statusCode : null;
     }
@@ -101,7 +106,7 @@ class OpenApiMockMiddleware implements MiddlewareInterface
 
     private function getExample(ServerRequestInterface $request): string|null
     {
-        $example = $request->getHeader(self::HEADER_FAKER_EXAMPLE)[0] ?? null;
+        $example = $request->getHeader(self::HEADER_OPENAPI_MOCK_EXAMPLE)[0] ?? null;
 
         return !empty($example) ? $example : null;
     }

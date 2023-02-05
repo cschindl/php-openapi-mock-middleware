@@ -34,7 +34,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/test'));
         $request->getMethod()->willReturn('GET');
         $request->getHeader(Argument::any())->willReturn([]);
-        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn([]);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_ACTIVE)->willReturn([]);
 
         $response = $this->prophesize(ResponseInterface::class)->reveal();
 
@@ -68,10 +68,10 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/test'));
         $request->getMethod()->willReturn('GET');
         $request->getHeader(Argument::any())->willReturn([]);
-        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
-        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_STATUSCODE)->willReturn(['400']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_ACTIVE)->willReturn(['true']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_STATUSCODE)->willReturn(['400']);
         $request->getHeader(OpenApiMockMiddleware::HEADER_CONTENT_TYPE)->willReturn(['application/problem+json']);
-        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_EXAMPLE)->willReturn(['testExample']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_EXAMPLE)->willReturn(['testExample']);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([]);
@@ -118,7 +118,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/dummy-path'));
         $request->getMethod()->willReturn('GET');
         $request->getHeader(Argument::any())->willReturn([]);
-        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_ACTIVE)->willReturn(['true']);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([]);
@@ -160,7 +160,7 @@ class OpenApiMockMiddlewareTest extends TestCase
         $request->getUri()->willReturn(new Uri('http://localhost:4010/test'));
         $request->getMethod()->willReturn('GET');
         $request->getHeader(Argument::any())->willReturn([]);
-        $request->getHeader(OpenApiMockMiddleware::HEADER_FAKER_ACTIVE)->willReturn(['true']);
+        $request->getHeader(OpenApiMockMiddleware::HEADER_OPENAPI_MOCK_ACTIVE)->willReturn(['true']);
         $handler = $this->prophesize(RequestHandlerInterface::class);
 
         $schema = new OpenApi([]);

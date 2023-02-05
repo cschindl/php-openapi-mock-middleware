@@ -2,7 +2,7 @@ parameters:
     inferPrivatePropertyTypeFromConstructor: true
     checkGenericClassInNonGenericObjectType: false
     tmpDir: .build/phpstan/
-    level: 8
+    level: 9
     paths:
         - src
         - tests
