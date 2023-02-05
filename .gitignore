@@ -1,4 +1,3 @@
-.build
 .phpcs-cache
 composer.lock
 vendor
