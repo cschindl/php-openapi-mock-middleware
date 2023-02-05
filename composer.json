@@ -3,6 +3,14 @@
     "description": "PSR-15 Middleware that simulates the API responses using an OpenAPI schema.",
     "license": "MIT",
     "type": "library",
+    "keywords": [
+        "openapi",
+        "middleware",
+        "psr-15",
+        "psr-7",
+        "mock",
+        "api"
+    ],
     "authors": [
         {
             "name": "Carsten Schindler",
